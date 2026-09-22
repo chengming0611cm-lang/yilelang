@@ -46,6 +46,27 @@ export class AvalonEngine extends GameEngine {
     };
   }
 
+  
+  getVisionForRole(role, seatNumber) {
+    const vision = {};
+    const allPlayers = Array.from(this.room.players.values());
+    
+    if (role === AVALON_ROLES.MERLIN) {
+      vision.evils = allPlayers
+        .filter(p => p.seatNumber !== seatNumber && [AVALON_ROLES.ASSASSIN, AVALON_ROLES.MORGANA, AVALON_ROLES.OBERON, AVALON_ROLES.MINION].includes(p.role))
+        .map(p => p.seatNumber);
+    } else if (role === AVALON_ROLES.PERCIVAL) {
+      vision.merlinOrMorgana = allPlayers
+        .filter(p => p.seatNumber !== seatNumber && [AVALON_ROLES.MERLIN, AVALON_ROLES.MORGANA].includes(p.role))
+        .map(p => p.seatNumber);
+    } else if ([AVALON_ROLES.ASSASSIN, AVALON_ROLES.MORGANA, AVALON_ROLES.MORDRED, AVALON_ROLES.MINION].includes(role)) {
+      vision.evilMates = allPlayers
+        .filter(p => p.seatNumber !== seatNumber && [AVALON_ROLES.ASSASSIN, AVALON_ROLES.MORGANA, AVALON_ROLES.MORDRED, AVALON_ROLES.MINION].includes(p.role))
+        .map(p => p.seatNumber);
+    }
+    return vision;
+  }
+
   startGame(io) {
     const playerCount = this.room.players.size;
     let effectiveCount = playerCount < 5 ? 5 : playerCount;

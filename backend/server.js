@@ -54,18 +54,41 @@ io.on('connection', (socket) => {
 
     broadcastRoomUpdate(roomId);
 
-    callback({
-      success: true,
-      roomId,
-      roomStatus: room.status,
-      gameType: room.gameType,
-      isHost: room.hostId === sessionId,
-      settings: room.settings,
-      playerState: {
-        initialRole: player.initialRole,
-        currentRole: player.currentRole
+    
+      let gameState = null;
+      if (room.engine && room.engine.game) {
+        if (room.gameType === 'avalon') {
+          gameState = {
+            phase: room.engine.game.phase,
+            vision: room.engine.getVisionForRole ? room.engine.getVisionForRole(player.initialRole, player.seatNumber) : {},
+            leaderSeat: room.engine.game.leaderSeat,
+            currentQuestSize: room.engine.game.currentQuestSize,
+            failedVotes: room.engine.game.failedVotes,
+            proposedTeam: room.engine.game.proposedTeam,
+            questResults: room.engine.game.questResults
+          };
+        } else if (room.gameType === 'onuw') {
+          gameState = {
+            currentNightRole: room.engine.game.currentActiveRole || '',
+            nightViewData: room.status === 'NIGHT' && typeof room.engine.getRoleNightViewData === 'function' ? room.engine.getRoleNightViewData(player) : {}
+          };
+        }
       }
-    });
+
+      callback({
+        success: true,
+        roomId,
+        roomStatus: room.status,
+        gameType: room.gameType,
+        isHost: room.hostId === sessionId,
+        settings: room.settings,
+        playerState: {
+          initialRole: player.initialRole || player.role,
+          currentRole: player.currentRole || player.role
+        },
+        gameState
+      });
+
   });
 
   // 2. 切换游戏类型
