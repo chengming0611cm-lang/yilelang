@@ -108,7 +108,7 @@ class Manager {
         sessionId,
         socketId,
         nickname,
-        seatNumber: -1,
+        seatNumber: Array.from(room.players.values()).reduce((max, p) => Math.max(max, p.seatNumber), 0) + 1,
         isReady: false,
         offline: false,
         offlineTimer: null

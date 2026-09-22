@@ -116,8 +116,8 @@
       
       <view class="player-list">
         <text class="sub-title">玩家列表 ({{ players.length }}/10)</text>
-        <view class="player-item" :class="{ 'offline-player': p.offline }" v-for="p in sortedPlayers" :key="p.sessionId">
-          <PlayerAvatar :nickname="p.nickname" :seatNumber="p.seatNumber" :offline="p.offline" /> 
+        <view class="player-item" :class="{ 'offline-player': p.offline }" v-for="p in sortedPlayers" :key="p.sessionId" style="display: flex; align-items: center; justify-content: flex-start;">
+          <text class="font-bold text-slate-700" style="font-size: 32rpx; margin-right: 16rpx;">[{{ p.seatNumber }}号] {{ p.nickname }}</text> 
           <text v-if="p.isHost" class="host-tag">(房主)</text>
           <text v-else-if="p.isReady" style="color: #27ae60; font-size: 24rpx; margin-left: 10rpx; font-weight: bold;">(已准备)</text>
           <text v-else style="color: #7f8c8d; font-size: 24rpx; margin-left: 10rpx;">(未准备)</text>
@@ -367,7 +367,7 @@
           v-for="p in sortedPlayers" 
           :key="p.sessionId"
           style="display: flex; justify-content: space-between; align-items: center;">
-          <PlayerAvatar :nickname="p.nickname" :seatNumber="p.seatNumber" :offline="p.offline" />
+          <text class="font-bold text-slate-700" style="font-size: 32rpx; margin-right: 16rpx;">[{{ p.seatNumber }}号] {{ p.nickname }}</text>
           <button size="mini" type="primary" @click="submitVote(p.seatNumber)">投票</button>
         </view>
         <button class="btn mt" type="default" @click="submitVote(-1)">弃权</button>
