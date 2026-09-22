@@ -94,6 +94,7 @@ export class AvalonEngine extends GameEngine {
 
     for (let i = 0; i < allPlayers.length; i++) {
       allPlayers[i].role = roles[i];
+      allPlayers[i].initialRole = roles[i];
       allPlayers[i].hasConfirmedNight = false;
     }
 
@@ -127,21 +128,16 @@ export class AvalonEngine extends GameEngine {
           .map(p => p.seatNumber);
       }
 
+      
       io.to(player.socketId).emit('avalon_game_started', {
-        playerState: {
-          initialRole: player.role,
-          seatNumber: player.seatNumber
-        },
-        gameState: {
-          phase: this.game.phase,
-          vision: vision,
-          leaderSeat: this.game.leaderSeat,
-          currentQuestSize: (AVALON_RULES[effectiveCount] || AVALON_RULES[5]).quests[0],
-          failedVotes: 0
-        },
-        playersList: allPlayers.map(p => ({ seatNumber: p.seatNumber, nickname: p.nickname, offline: p.offline }))
+        role: player.role,
+        phase: this.game.phase,
+        vision: vision
       });
     }
+    
+    this.room.status = 'PLAYING';
+
   }
 
   handlePlayerAction(sessionId, actionData, io) {
