@@ -67,18 +67,19 @@ export class OnuwEngine extends GameEngine {
     this.game.currentNightIndex = -1;
     this.game.logs = [];
 
-    io.to(this.room.roomId).emit('game_started', {
-      gameType: 'onuw',
-      players: allPlayers.map(p => ({
-        sessionId: p.sessionId,
-        nickname: p.nickname,
-        seatNumber: p.seatNumber,
-        isHost: p.sessionId === this.room.hostId
-      }))
-    });
+    const playersList = allPlayers.map(p => ({
+      sessionId: p.sessionId,
+      nickname: p.nickname,
+      seatNumber: p.seatNumber,
+      isHost: p.sessionId === this.room.hostId
+    }));
 
     allPlayers.forEach(p => {
-      io.to(p.socketId).emit('your_role', { role: p.initialRole });
+      io.to(p.socketId).emit('game_started', {
+        gameType: 'onuw',
+        initialRole: p.initialRole,
+        players: playersList
+      });
     });
 
     // 等待 5 秒钟看牌后，开始结算黑夜行动
