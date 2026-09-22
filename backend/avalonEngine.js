@@ -51,7 +51,41 @@ export class AvalonEngine extends GameEngine {
     let effectiveCount = playerCount < 5 ? 5 : playerCount;
     if (playerCount > 10) throw new Error('最多支持 10 人游戏');
 
-    let roles = shuffleArray([...this.room.settings.selectedRoles]);
+    
+    let roles = [];
+    if (this.room.settings && this.room.settings.selectedRoles && this.room.settings.selectedRoles.length === effectiveCount) {
+        roles = shuffleArray([...this.room.settings.selectedRoles]);
+    } else {
+        const rule = AVALON_RULES[effectiveCount];
+        let goodCount = rule.good;
+        let evilCount = rule.evil;
+
+        roles.push('merlin', 'percival');
+        goodCount -= 2;
+
+        roles.push('morgana', 'assassin');
+        evilCount -= 2;
+
+        if (evilCount > 0 && effectiveCount >= 7) {
+            roles.push('oberon');
+            evilCount--;
+        }
+        if (evilCount > 0 && effectiveCount >= 8) {
+            roles.push('mordred');
+            evilCount--;
+        }
+        
+        while (goodCount > 0) {
+            roles.push('loyal');
+            goodCount--;
+        }
+        while (evilCount > 0) {
+            roles.push('minion_avalon');
+            evilCount--;
+        }
+        roles = shuffleArray(roles);
+    }
+
     const allPlayers = Array.from(this.room.players.values());
 
     // 严格按照座号排列，以确定初始队长
