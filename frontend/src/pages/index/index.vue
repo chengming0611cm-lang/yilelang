@@ -233,13 +233,17 @@
       </view>
 
       <view v-if="nightPanelOpen" class="night-content-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-        <view class="role-card-3d mt">
+        <view class="flex items-center justify-center mt" style="display: flex; flex-direction: row; align-items: center; justify-content: center; width: 100%; margin-top: 40rpx;">
+        <view class="role-card-3d" style="margin: 0; box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.5);">
           <view class="role-sprite-large onuw-sprite" :style="{'background-position': ROLES_DICTIONARY[myInitialRole]?.spritePosition}"></view>
-          <text class="card-name-overlay">{{ ROLE_NAMES[myInitialRole] }}</text>
         </view>
-        <text class="card-label mt" style="font-size: 28rpx; color: #888;">您的初始底牌</text>
-
-        <button class="hide-panel-btn" size="mini" @click.stop="nightPanelOpen = false">🙈 收起（防窥）</button>
+        <view style="display: flex; flex-direction: column; align-items: flex-start; margin-left: 40rpx;">
+          <text class="card-name" style="color: #2c3e50; font-size: 56rpx; font-weight: bold; margin-bottom: 10rpx;">{{ ROLE_NAMES[myInitialRole] }}</text>
+          <text style="color: #666; font-size: 32rpx; margin-bottom: 10rpx; font-weight: bold;">[ {{ mySeatNumber }}号 ] {{ players.find(p => p.sessionId === sessionId)?.nickname || '' }}</text>
+          <text class="card-label" style="font-size: 28rpx; color: #888; margin-bottom: 30rpx;">您的初始底牌</text>
+          <button class="hide-panel-btn" size="mini" @click.stop="nightPanelOpen = false" style="margin: 0;">🙈 收起（防窥）</button>
+        </view>
+      </view>
 
         <!-- 属于我的回合 -->
         <view v-if="isMyTurn" class="action-panel active-turn">
@@ -837,6 +841,7 @@ const joinRoom = (isAuto = false) => {
   
   socket.on('game_started', (data) => {
     appState.value = 'NIGHT';
+    myInitialRole.value = data.initialRole;
     
     isMyTurn.value = false;
 
