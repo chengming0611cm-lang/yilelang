@@ -3,12 +3,12 @@
     <!-- 全局断网重连遮罩 -->
     <view v-if="isDisconnected" class="disconnect-mask">
       <view class="disconnect-panel">
-        <text style="font-size: 80rpx;"></text>
-        <text style="font-size: 36rpx; font-weight: bold; margin-top: 20rpx;">网络断开，正在尝试重?..</text>
+        <text style="font-size: 80rpx;">⚠️</text>
+        <text style="font-size: 36rpx; font-weight: bold; margin-top: 20rpx;">网络断开，正在尝试重连...</text>
       </view>
     </view>
 
-    
+    <!-- 顶部状态栏：显示自己的玩家座号 -->
     <view class="w-full flex justify-center mt-4" v-if="appState === 'PLAYING' || appState === 'NIGHT' || appState === 'DAY' || appState === 'VOTING'">
       <view class="bg-blue-600/30 border border-blue-500/50 rounded-full px-6 py-2 shadow-[0_0_15px_rgba(37,99,235,0.3)] backdrop-blur-sm">
         <text class="text-white text-sm font-bold tracking-wide">🎯 你是 {{ mySeatNumber }} 号玩家</text>
@@ -20,10 +20,10 @@
       <view class="header-inner">
         <!-- 左侧/居中：唤醒房间号分享 -->
         <view class="room-pill-btn pulse-animation" @click="showShareModal = true">
-          <text class="room-pill-text">房间房间号: {{ roomId }} (点击邀请)</text>
+          <text class="room-pill-text">房间号: {{ roomId }} (点击邀请)</text>
         </view>
 
-        <!-- 右侧：控制与退?-->
+        <!-- 右侧：控制与退出 -->
         <view class="header-actions">
           <text v-if="appState !== 'WAITING' && isHost" class="header-btn danger-text" @click="forceReturnLobby">强制重开</text>
           <text class="header-btn ghost-btn" @click="leaveRoom">退出房间</text>
@@ -36,7 +36,7 @@
       v-if="appState === 'NIGHT' || appState === 'DAY' || appState === 'VOTING'"
       class="guide-float-btn"
       @click="showRoleGuide = true">
-      <text class="guide-icon">?</text>
+      <text class="guide-icon">📖</text>
     </view>
 
     <!-- 音效测试按钮（WAITING/NIGHT/DAY/VOTING 状态显示） -->
@@ -44,18 +44,18 @@
       v-if="appState === 'WAITING' || appState === 'NIGHT' || appState === 'DAY' || appState === 'VOTING'"
       class="audio-test-btn"
       @click="testAudio">
-      <text class="audio-icon"></text>
+      <text class="audio-icon">🔊</text>
     </view>
 
     <!-- 角色图鉴弹窗 -->
     <view v-if="showRoleGuide" class="guide-modal" @click="showRoleGuide = false">
       <view class="guide-panel" @click.stop="">
         <view class="guide-header">
-          <text class="guide-title">?? 角色图鉴</text>
+          <text class="guide-title">📖 角色图鉴</text>
           <text class="guide-close" @click="showRoleGuide = false">✕</text>
         </view>
 
-        <!-- 我的角色（固定在顶部，不参与滚动?-->
+        <!-- 我的角色（固定在顶部，不参与滚动） -->
         <view style="padding: 24rpx 24rpx 0 24rpx; flex-shrink: 0; box-sizing: border-box; width: 100%;">
           <view v-if="activeMyRole && activeDictionary[activeMyRole]" class="role-card my-role">
             <view class="role-header">
@@ -70,16 +70,16 @@
             </view>
             <text class="role-desc">{{ activeDictionary[activeMyRole].description }}</text>
             <view class="role-tip">
-              <text class="tip-label">?? 高阶提示</text>
+              <text class="tip-label">💡 高阶提示</text>
               <text class="tip-content">{{ activeDictionary[activeMyRole].advancedTip }}</text>
             </view>
           </view>
         </view>
 
         <scroll-view scroll-y class="guide-content">
-          <!-- 本局所有角?-->
+          <!-- 本局所有角色 -->
           <view class="roles-section">
-            <text class="section-title">本局所有角?(??{{ selectedRoles.length }} </text>
+            <text class="section-title">本局所有角色 (共 {{ selectedRoles.length }} 张)</text>
             <view
               v-for="(roleId, index) in selectedRoles"
               :key="index"
@@ -112,42 +112,43 @@
 
     <!-- ==================== WAITING (准备阶段) ==================== -->
     <view v-else-if="appState === 'WAITING'" class="section">
-      <text class="room-title">房间房间号: {{ roomId }}</text>
+      <text class="room-title">房间号: {{ roomId }}</text>
       
       <view class="player-list">
-        <text class="sub-title">玩家列表 ({{ players.length }}</text>
+        <text class="sub-title">玩家列表 ({{ players.length }}/10)</text>
         <view class="player-item" :class="{ 'offline-player': p.offline }" v-for="p in sortedPlayers" :key="p.sessionId">
           <PlayerAvatar :nickname="p.nickname" :seatNumber="p.seatNumber" :offline="p.offline" /> 
           <text v-if="p.isHost" class="host-tag">(房主)</text>
-          <text v-else-if="p.isReady" style="color: #27ae60; font-size: 24rpx; margin-left: 10rpx; font-weight: bold;">(已准?</text>
-          <text v-else style="color: #7f8c8d; font-size: 24rpx; margin-left: 10rpx;">(未准</text>
+          <text v-else-if="p.isReady" style="color: #27ae60; font-size: 24rpx; margin-left: 10rpx; font-weight: bold;">(已准备)</text>
+          <text v-else style="color: #7f8c8d; font-size: 24rpx; margin-left: 10rpx;">(未准备)</text>
           <text v-if="p.offline" style="color: #e74c3c; font-size: 24rpx; margin-left: 10rpx; font-weight: bold;">(离线)</text>
         </view>
       </view>
 
       <view class="settings" v-if="isHost">
         <view class="game-selector mt" style="margin-bottom: 30rpx;">
-          <text class="sub-title">当前选</text>
+          <text class="sub-title">当前游戏模式</text>
           <radio-group @change="onGameTypeChange" style="display: flex; gap: 20rpx; margin-top: 10rpx;">
-            <label><radio value="onuw" :checked="gameType === 'onuw'" /> 一夜终极狼阿瓦隆</label>
-            <label><radio value="avalon" :checked="gameType === 'avalon'" /> 阿瓦阿瓦隆</label>
+            <label><radio value="onuw" :checked="gameType === 'onuw'" /> 一夜终极狼人</label>
+            <label><radio value="avalon" :checked="gameType === 'avalon'" /> 阿瓦隆</label>
           </radio-group>
         </view>
 
         <!-- 一夜狼配置 -->
         <view v-if="gameType === 'onuw'">
-          <text class="sub-title">设置板子 (当前已加?{{ players.length }} 人，实际需?{{ players.length + 3 }} 张牌)</text>
-          <text style="font-size: 28rpx; color: #e74c3c; font-weight: bold;">当前已? {{ selectedRoles.length }}</text>
+          <text class="sub-title">设置板子 (当前已有 {{ players.length }} 人，实际需 {{ players.length + 3 }} 张牌)</text>
+          <text style="font-size: 28rpx; color: #e74c3c; font-weight: bold;">当前已选: {{ selectedRoles.length }} 张</text>
           
           <view class="recommend-box mt">
             <text class="sub-title" style="margin-bottom: 10rpx;">智能板子推荐:</text>
             <view style="display: flex; flex-wrap: wrap; gap: 10rpx;">
-              <button size="mini" type="default" v-for="n in 8" :key="n" @click="applyRecommend(n+2)">{{ n+2 }}</button>
+              <button size="mini" type="default" v-for="n in 8" :key="n" @click="applyRecommend(n+2)">{{ n+2 }} 人局</button>
             </view>
           </view>
 
           <view class="roles-grid mt">
-            <view class="role-counter-item" v-for="(name, roleId) in ROLE_NAMES" :key="roleId">
+            <!-- 这里使用过滤后的 ONUW_ROLE_NAMES 避免混入阿瓦隆角色 -->
+            <view class="role-counter-item" v-for="(name, roleId) in ONUW_ROLE_NAMES" :key="roleId">
               <text class="role-name">{{ name }}</text>
               <view class="stepper">
                 <text class="step-btn" @click="changeRoleCount(roleId, -1)">-</text>
@@ -158,15 +159,15 @@
           </view>
         </view>
 
-        <!-- 阿瓦隆配置占?-->
+        <!-- 阿瓦隆配置占位 -->
         <view v-else-if="gameType === 'avalon'">
-          <text class="sub-title">阿瓦隆</text>
+          <text class="sub-title">阿瓦隆板子配置</text>
           <view style="padding: 20rpx; background: #f9f9f9; border-radius: 10rpx;">
             <label style="display: block; margin-bottom: 10rpx;"><checkbox checked disabled /> 梅林 & 派西维尔</label>
-            <label style="display: block; margin-bottom: 10rpx;"><checkbox checked disabled /> 莫甘?& 刺客</label>
-            <label style="display: block; margin-bottom: 10rpx;"><checkbox disabled /> 奥伯阿瓦隆</label>
+            <label style="display: block; margin-bottom: 10rpx;"><checkbox checked disabled /> 莫甘娜 & 刺客</label>
+            <label style="display: block; margin-bottom: 10rpx;"><checkbox disabled /> 奥伯伦</label>
             <label style="display: block; margin-bottom: 10rpx;"><checkbox disabled /> 莫德雷德</label>
-            <text style="font-size: 24rpx; color: #888; margin-top: 10rpx; display: block;">系统将根据人数（5-10人）自动计算好人和坏人阵营的牌数及任务所需的组</text>
+            <text style="font-size: 24rpx; color: #888; margin-top: 10rpx; display: block;">系统将根据人数（5-10人）自动计算好人和坏人阵营的牌数及任务所需的组队人数</text>
           </view>
         </view>
 
@@ -188,27 +189,27 @@
     <template v-else-if="['NIGHT', 'DAY', 'VOTING', 'END', 'PLAYING'].includes(appState)">
       <!-- ==================== END (结算复盘) ==================== -->
       <view v-if="appState === 'END'" class="section center-layout">
-        <text class="night-title" style="color: #e74c3c;">?? 游戏结束</text>
-        <text style="font-size: 40rpx; font-weight: bold; margin: 20rpx 0;">{{ gameResult?.winner === 'good' ? '正义阵营' : (gameResult?.winner === 'evil' ? '邪恶阵营' : gameResult?.winner) }}</text>
+        <text class="night-title" style="color: #e74c3c;">🏆 游戏结束</text>
+        <text style="font-size: 40rpx; font-weight: bold; margin: 20rpx 0;">{{ gameResult?.winner === 'good' ? '正义阵营' : (gameResult?.winner === 'evil' ? '邪恶阵营' : gameResult?.winner) }} 获胜</text>
         <text style="color: #666; margin-bottom: 40rpx;">{{ gameResult?.summary }}</text>
         
         <view v-if="gameResult?.exiledPlayers?.length > 0" style="width: 100%; text-align: left; margin-bottom: 40rpx;">
-          <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">被放逐玩</text>
+          <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">被放逐玩家:</text>
           <text style="color: #c0392b;">{{ gameResult?.exiledPlayers.join(', ') }}</text>
         </view>
 
         <view v-if="gameResult?.finalRoles?.length > 0" style="width: 100%; text-align: left; margin-bottom: 40rpx;">
-          <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">?? 玩家最终底</text>
+          <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">🎭 玩家最终底牌:</text>
           <view v-for="p in gameResult?.finalRoles" :key="p.nickname" style="margin-bottom: 10rpx; font-size: 28rpx;">
             <text>{{ p.nickname }} : </text>
             <text v-if="p.initialRole !== p.currentRole" style="color: #888; text-decoration: line-through;">{{ ROLE_NAMES[p.initialRole] || p.initialRole }}</text>
-            <text v-if="p.initialRole !== p.currentRole"> </text>
+            <text v-if="p.initialRole !== p.currentRole"> ➡️ </text>
             <text style="color: #e67e22; font-weight: bold;">{{ ROLE_NAMES[p.currentRole] || p.currentRole }}</text>
           </view>
         </view>
 
         <view v-if="gameResult?.timeline?.length > 0" style="width: 100%; text-align: left; margin-bottom: 40rpx;">
-          <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">?? 全局夜间时间线复</text>
+          <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">📜 全局夜间时间线复盘:</text>
           <scroll-view scroll-y style="max-height: 400rpx; background: #f8f9f9; padding: 20rpx; border-radius: 12rpx;">
             <view v-for="(log, idx) in gameResult?.timeline" :key="idx" style="margin-bottom: 16rpx; font-size: 26rpx; color: #34495e;">
               {{ log }}
@@ -227,7 +228,7 @@
         <view v-if="appState === 'NIGHT'" class="section center-layout night-section">
       
       <view class="night-header">
-        <text class="night-title">?? 夜幕降临</text>
+        <text class="night-title">🌙 夜幕降临</text>
         <text class="night-info">当前行动: {{ ROLE_NAMES[currentNightRole] || '...' }}</text>
       </view>
 
@@ -238,40 +239,40 @@
         </view>
         <text class="card-label mt" style="font-size: 28rpx; color: #888;">您的初始底牌</text>
 
-        <button class="hide-panel-btn" size="mini" @click.stop="nightPanelOpen = false">?? 收起（防窥）</button>
+        <button class="hide-panel-btn" size="mini" @click.stop="nightPanelOpen = false">🙈 收起（防窥）</button>
 
         <!-- 属于我的回合 -->
         <view v-if="isMyTurn" class="action-panel active-turn">
-          <text class="action-title">请</text>
+          <text class="action-title">请执行行动</text>
           
           <!-- 狼人 -->
           <view v-if="myInitialRole === 'werewolf'">
             <view v-if="nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0">
-              <text>你的狼</text>
-              <text v-for="w in nightViewData.werewolfMates" :key="w">??λ?{{ w }} </text>
+              <text>你的狼队友是：</text>
+              <text v-for="w in nightViewData.werewolfMates" :key="w" style="font-weight: bold; margin-left: 10rpx;">[ {{ w }}号 ]</text>
             </view>
             <view v-else>
-              <text>你是孤狼。你可以查看中央的</text>
+              <text>你是孤狼。你可以查看中央的牌:</text>
               <view class="center-cards mt">
-                <button size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 0 })"></button>
-                <button size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 1 })"></button>
-                <button size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 2 })"></button>
+                <button size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 0 })">查看左侧</button>
+                <button size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 1 })">查看中间</button>
+                <button size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 2 })">查看右侧</button>
               </view>
             </view>
           </view>
 
-          <!-- 预言?-->
+          <!-- 预言家 -->
           <view v-else-if="myInitialRole === 'seer'">
-            <text>你可以验一名玩家的牌，或看两张中</text>
+            <text>你可以验一名玩家的牌，或看两张中央的牌:</text>
             <view style="margin: 20rpx 0;">
               <picker @change="onSeerPlayerChange" :range="otherPlayers" range-key="displayName">
-                <button size="mini" type="primary">验玩</button>
+                <button size="mini" type="primary">验玩家牌</button>
               </picker>
             </view>
             <view class="center-cards mt">
-              <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 1] })">??</button>
-              <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [1, 2] })">??</button>
-              <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 2] })">??</button>
+              <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 1] })">看左+中</button>
+              <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [1, 2] })">看中+右</button>
+              <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 2] })">看左+右</button>
             </view>
           </view>
 
@@ -279,11 +280,11 @@
           <view v-else-if="myInitialRole === 'robber'">
             <text>选择一名玩家交换底牌（并查看新底牌）：</text>
             <picker @change="onRobPlayerChange" :range="otherPlayers" range-key="displayName">
-              <button class="mt" size="mini" type="primary">选择玩家并抢</button>
+              <button class="mt" size="mini" type="primary">选择玩家并抢夺</button>
             </picker>
           </view>
 
-          <!-- 捣蛋?-->
+          <!-- 捣蛋鬼 -->
           <view v-else-if="myInitialRole === 'troublemaker'">
             <text>你可以选择交换两名其他玩家的底牌：</text>
             <picker @change="onTroublemakerP1Change" :range="otherPlayers" range-key="displayName">
@@ -297,15 +298,15 @@
 
           <!-- 酒鬼 -->
           <view v-else-if="myInitialRole === 'drunk'">
-            <text>盲换中央的</text>
+            <text>盲换中央的牌:</text>
             <view class="center-cards mt">
-              <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 0 })"></button>
-              <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 1 })"></button>
-              <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 2 })"></button>
+              <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 0 })">换左侧</button>
+              <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 1 })">换中间</button>
+              <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 2 })">换右侧</button>
             </view>
           </view>
 
-          <!-- 失眠?-->
+          <!-- 失眠者 -->
           <view v-else-if="myInitialRole === 'insomniac'">
             <text>经过一晚，你的当前底牌变成了：</text>
             <text style="font-size: 36rpx; color: #e74c3c; display: block; margin-top: 10rpx; font-weight: bold;">
@@ -315,16 +316,16 @@
           
           <!-- 爪牙 -->
           <view v-else-if="myInitialRole === 'minion'">
-            <text>场上的</text>
-            <text v-for="w in nightViewData.werewolves" :key="w">??λ?{{ w }} </text>
-            <text v-if="!nightViewData.werewolves || nightViewData.werewolves.length === 0">场上没</text>
+            <text>场上的狼人是:</text>
+            <text v-for="w in nightViewData.werewolves" :key="w" style="font-weight: bold; margin-left: 10rpx;">[ {{ w }}号 ]</text>
+            <text v-if="!nightViewData.werewolves || nightViewData.werewolves.length === 0">场上没有狼人</text>
           </view>
 
-          <!-- 共济?-->
+          <!-- 守夜人 -->
           <view v-else-if="myInitialRole === 'mason'">
-            <text>你的共济会</text>
-            <text v-for="m in nightViewData.masonMates" :key="m">??λ?{{ m }} </text>
-            <text v-if="!nightViewData.masonMates || nightViewData.masonMates.length === 0">你是唯一的</text>
+            <text>你的守夜人队友是:</text>
+            <text v-for="m in nightViewData.masonMates" :key="m" style="font-weight: bold; margin-left: 10rpx;">[ {{ m }}号 ]</text>
+            <text v-if="!nightViewData.masonMates || nightViewData.masonMates.length === 0">你是唯一的守夜人</text>
           </view>
 
           <view style="margin-top: 40rpx;" v-if="['werewolf', 'minion', 'mason', 'insomniac'].includes(myInitialRole) || (myInitialRole==='werewolf' && nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0)">
@@ -335,30 +336,30 @@
           </view>
         </view>
         
-        <!-- 盲操?等待回合 -->
+        <!-- 盲操作等待回合 -->
         <view v-else class="action-panel blind-turn">
           <text class="action-title">请等待其他人行动...</text>
         </view>
       </view>
 
       <view v-else class="night-mask">
-        <button class="show-panel-btn" @click.stop="nightPanelOpen = true">?? 点击查看您的底牌与操</button>
-        <text class="mask-sub">未到您的回合时，请随意滑动屏幕进行伪装操作，防止暴</text>
+        <button class="show-panel-btn" @click.stop="nightPanelOpen = true">👀 点击查看您的底牌与操作面板</button>
+        <text class="mask-sub">未到您的回合时，请随意滑动屏幕进行伪装操作，防止暴露身份</text>
       </view>
     </view>
 
     <!-- ==================== DAY (白天讨论) ==================== -->
     <view v-else-if="appState === 'DAY'" class="section center-layout">
-      <text class="day-title">???太阳升起，请自由讨论</text>
+      <text class="day-title">☀️ 太阳升起，请自由讨论</text>
       <text class="sub-title">请通过线下交流，寻找狼人！</text>
-      <text class="temp-text" style="margin-top: 40rpx;">(倒计时结束后将自动进入投</text>
+      <text class="temp-text" style="margin-top: 40rpx;">(讨论结束后由房主开启投票)</text>
       <button class="btn mt" type="warn" v-if="isHost" @click="forceVote">房主提前进入投票</button>
     </view>
 
     <!-- ==================== VOTING (投票阶段) ==================== -->
     <view v-else-if="appState === 'VOTING'" class="section center-layout">
-      <text class="night-title">????投票阶段</text>
-      <text class="sub-title">请选择一名玩家进行放?(可弃</text>
+      <text class="night-title">🗳️ 投票阶段</text>
+      <text class="sub-title">请选择一名玩家进行放逐 (可弃权)</text>
       
       <view class="player-list" style="width: 100%; margin-top: 30rpx;">
         <view 
@@ -405,21 +406,25 @@ import AvalonGameView from '../../components/AvalonGameView.vue';
 import ShareQrcodeModal from '../../components/ShareQrcodeModal.vue';
 import LoginView from '../../components/LoginView.vue';
 
-// 角色字典映射
-const ROLE_NAMES = {
-  werewolf: '狼人', minion: '爪牙', mason: '共济会',
+// 角色字典映射 (一夜狼和阿瓦隆彻底分离防止覆盖)
+const ONUW_ROLE_NAMES = {
+  werewolf: '狼人', minion: '爪牙', mason: '守夜人',
   seer: '预言家', robber: '强盗', troublemaker: '捣蛋鬼',
   drunk: '酒鬼', insomniac: '失眠者', villager: '平民',
-  hunter: '猎人', tanner: '皮匠', doppelganger: '化身幽灵',
+  hunter: '猎人', tanner: '皮匠', doppelganger: '化身幽灵'
+};
+
+const ROLE_NAMES = {
+  ...ONUW_ROLE_NAMES,
   // Avalon
   merlin: '梅林', percival: '派西维尔', loyal: '亚瑟的忠臣',
   morgana: '莫甘娜', assassin: '刺客', oberon: '奥伯伦',
-  mordred: '莫德雷德', minion: '莫德雷德的爪牙'
+  mordred: '莫德雷德', minion_avalon: '莫德雷德的爪牙'
 };
 
 const appState = ref('LOBBY');
-const gameType = ref('onuw'); // 当前房间选定的游戏类;
-  const nickname = ref('');
+const gameType = ref('onuw'); // 当前房间选定的游戏类型
+const nickname = ref('');
 const roomId = ref('');
 const sessionId = ref('');
 const isHost = ref(false);
@@ -428,11 +433,14 @@ const sortedPlayers = computed(() => [...players.value].sort((a, b) => a.seatNum
 const selectedRoles = ref([]);
 
 const activeDictionary = computed(() => gameType.value === 'avalon' ? AVALON_ROLES_DICTIONARY : ROLES_DICTIONARY);
-// avalonState.role might not be initialized, fallback to empty string
 const activeMyRole = computed(() => gameType.value === 'avalon' ? avalonState.value?.role : myInitialRole.value);
 
-
 const showShareModal = ref(false);
+
+const mySeatNumber = computed(() => {
+  const me = players.value.find(p => p.sessionId === sessionId.value);
+  return me ? me.seatNumber : 0;
+});
 
 const myReadyStatus = computed(() => {
   const me = players.value.find(p => p.sessionId === sessionId.value);
@@ -478,19 +486,14 @@ const onAvalonAction = (actionData) => {
 
 // 角色图鉴相关
 const showRoleGuide = ref(false);
-
-// 夜间面板开关（替代长按?
 const nightPanelOpen = ref(false);
 
-// 本局所有角色直接使?selectedRoles ??ROLES_DICTIONARY 渲染
-
-// 夜间状?
+// 夜间状态
 const myInitialRole = ref('');
 const currentNightRole = ref('');
 const isMyTurn = ref(false);
 const nightViewData = ref({});
 const gameResult = ref(null);
-
 const isDisconnected = ref(false);
 
 const avalonState = ref({
@@ -513,35 +516,30 @@ const tmP1 = ref(null);
 const tmP2 = ref(null);
 
 // ============ 音效系统 ============
-// 使用 Web Audio API 合成提示音，无需外部音频文件，规避自动播放限?
 let audioCtx = null;
 const audioReady = ref(false);
 
-// 初始化音频上下文（必须在用户交互后调用）
 const initAudio = () => {
   if (audioCtx) return;
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     audioCtx = new AC();
-    // iOS Safari 需?resume
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
     audioReady.value = true;
   } catch (e) {
-    console.warn('音频初始化失?', e);
+    console.warn('音频初始化失败', e);
   }
 };
 
-// 播放单个音符
 const playTone = (freq, startTime, duration, volume = 0.3, type = 'sine') => {
   if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, startTime);
-  // 淡入淡出避免爆音
   gain.gain.setValueAtTime(0, startTime);
   gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
   gain.gain.linearRampToValueAtTime(volume * 0.8, startTime + duration - 0.05);
@@ -552,7 +550,6 @@ const playTone = (freq, startTime, duration, volume = 0.3, type = 'sine') => {
   osc.stop(startTime + duration);
 };
 
-// 播放音效序列
 const playSound = (name) => {
   if (!audioCtx) {
     initAudio();
@@ -564,42 +561,35 @@ const playSound = (name) => {
   const t = audioCtx.currentTime;
 
   switch (name) {
-    // 天黑：低沉下行三?
     case 'night':
       playTone(392, t, 0.35, 0.35, 'sine');
       playTone(311, t + 0.3, 0.35, 0.35, 'sine');
       playTone(261, t + 0.6, 0.6, 0.35, 'sine');
       break;
-    // 角色轮换：清脆双音提示（所有人都能听到进度?
     case 'roleTurn':
       playTone(659, t, 0.15, 0.25, 'triangle');
       playTone(880, t + 0.15, 0.2, 0.25, 'triangle');
       break;
-    // 轮到我：急促三连?+ 上行，高辨识?
     case 'myTurn':
       playTone(880, t, 0.12, 0.4, 'square');
       playTone(1108, t + 0.14, 0.12, 0.4, 'square');
       playTone(1318, t + 0.28, 0.25, 0.4, 'square');
       break;
-    // 天亮：明亮上行四?
     case 'day':
       playTone(523, t, 0.18, 0.35, 'sine');
       playTone(659, t + 0.16, 0.18, 0.35, 'sine');
       playTone(784, t + 0.32, 0.18, 0.35, 'sine');
       playTone(1046, t + 0.48, 0.5, 0.35, 'sine');
       break;
-    // 投票：警示双音重?
     case 'vote':
       playTone(740, t, 0.2, 0.35, 'triangle');
       playTone(554, t + 0.22, 0.2, 0.35, 'triangle');
       playTone(740, t + 0.48, 0.2, 0.35, 'triangle');
       playTone(554, t + 0.7, 0.35, 0.35, 'triangle');
       break;
-    // 操作确认：短促单?
     case 'confirm':
       playTone(1046, t, 0.1, 0.25, 'sine');
       break;
-    // 游戏结束：长?
     case 'end':
       playTone(523, t, 0.25, 0.35, 'sine');
       playTone(784, t + 0.25, 0.25, 0.35, 'sine');
@@ -608,11 +598,10 @@ const playSound = (name) => {
   }
 };
 
-// 音效自检：点击后播放提示音并报告状?
 const testAudio = () => {
   initAudio();
   if (!audioCtx) {
-    uni.showToast({ title: '此浏览器不支持音?', icon: 'none', duration: 2500 });
+    uni.showToast({ title: '此浏览器不支持音效', icon: 'none', duration: 2500 });
     return;
   }
   if (audioCtx.state === 'suspended') {
@@ -625,26 +614,22 @@ const testAudio = () => {
     speak('语音播报正常');
   }
   uni.showToast({
-    title: audioCtx.state === 'running' ? '音效已开' : '请调高手机音量',
+    title: audioCtx.state === 'running' ? '音效已开启' : '请调高手机音量',
     icon: 'none',
     duration: 2000
   });
 };
 
-// TTS 语音播报（房主专用），悬疑男声风?
 const speak = (text) => {
   if (typeof window === 'undefined' || !window.speechSynthesis) return;
   try {
     window.speechSynthesis.cancel();
     const msg = new SpeechSynthesisUtterance(text);
     msg.lang = 'zh-CN';
-    
-    // 放慢语速，营造安静、神秘的游戏氛围
     msg.rate = 0.75; 
-    // 稍微压低音调，使其更加低?    msg.pitch = 0.8;
+    msg.pitch = 0.8;
     msg.volume = 1.0;
 
-    // 选择沉稳的男性播报音色（优先选择悬疑故事旁白?zh-CN-YunyeNeural 或其他男声）
     const voices = window.speechSynthesis.getVoices();
     if (voices && voices.length > 0) {
       let selectedVoice = voices.find(v => v.name.includes('Yunye') || v.name.includes('云野'));
@@ -658,7 +643,6 @@ const speak = (text) => {
         msg.voice = selectedVoice;
       }
     }
-
     window.speechSynthesis.speak(msg);
   } catch (e) {
     console.warn('语音播报失败', e);
@@ -667,13 +651,14 @@ const speak = (text) => {
 
 let socket = null;
 
-// 过滤掉自己，用于给预言家、强盗、捣蛋鬼选择目标
 const otherPlayers = computed(() => {
-  return players.value.filter(p => p.sessionId !== sessionId.value).sort((a,b) => a.seatNumber - b.seatNumber).map(p => ({...p, displayName: [号] }));
+  return players.value
+    .filter(p => p.sessionId !== sessionId.value)
+    .sort((a,b) => a.seatNumber - b.seatNumber)
+    .map(p => ({...p, displayName: `[${p.seatNumber}号] ${p.nickname}` }));
 });
 
 onMounted(() => {
-  // 生成或获取唯一 SessionID 用于断线重连
   let sid = uni.getStorageSync('werewolf_session_id');
   if (!sid) {
     sid = Math.random().toString(36).substring(2, 15);
@@ -681,14 +666,12 @@ onMounted(() => {
   }
   sessionId.value = sid;
 
-  // 读取上次的昵称和房间?
   const savedNickname = uni.getStorageSync('werewolf_nickname');
   const savedRoomId = uni.getStorageSync('werewolf_roomId');
   
   if (savedNickname && savedRoomId) {
     nickname.value = savedNickname;
     roomId.value = savedRoomId;
-    // 自动重连
     joinRoom(true);
   }
 });
@@ -696,34 +679,29 @@ onMounted(() => {
 const joinRoom = (isAuto = false) => {
   if (!nickname.value || !roomId.value) {
     if (isAuto) return;
-    return uni.showToast({ title: '请输入完?', icon: 'none' });
+    return uni.showToast({ title: '请输入完整信息', icon: 'none' });
   }
 
-  // 保存到本地缓?
   uni.setStorageSync('werewolf_nickname', nickname.value);
   uni.setStorageSync('werewolf_roomId', roomId.value);
 
   if (!isAuto) {
-    // 在用户手动点击时初始化音频（绕过浏览器自动播放限制）
     initAudio();
     playSound('confirm');
-    // 预热 TTS：iOS/Android 需要用户手势内首次调用才能后续自动播报
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       try {
         const warm = new SpeechSynthesisUtterance(' ');
         warm.volume = 0;
         window.speechSynthesis.speak(warm);
-      } catch (e) { /* 忽略预热失败 */ }
+      } catch (e) { }
     }
   }
 
-  // 开发环境连后端 3000，生产环境用同源
   const socketUrl = window.location.port === '5173' ? 'http://localhost:3000' : window.location.origin;
   socket = io(socketUrl, { query: {}, transports: ['websocket'] });
 
   socket.on('connect', () => {
     if (isDisconnected.value) {
-      // 发生了断线重连，主动拉取全量快照
       socket.emit('sync_state', { sessionId: sessionId.value, roomId: roomId.value }, (res) => {
         if (res.success) {
           isDisconnected.value = false;
@@ -731,7 +709,6 @@ const joinRoom = (isAuto = false) => {
           gameType.value = res.gameType;
           isHost.value = res.isHost;
           if (res.settings) {
-             roomSettings.value = res.settings;
              if (res.settings.selectedRoles) {
                selectedRoles.value = res.settings.selectedRoles;
              }
@@ -754,14 +731,12 @@ const joinRoom = (isAuto = false) => {
              }
           }
         } else {
-           // 快照恢复失败，降级为常规加入
            socket.emit('join_room', { roomId: roomId.value, nickname: nickname.value, sessionId: sessionId.value }, () => {
                isDisconnected.value = false;
            });
         }
       });
     } else {
-      // 首次加入
       socket.emit('join_room', { 
         roomId: roomId.value, 
         nickname: nickname.value, 
@@ -790,7 +765,6 @@ const joinRoom = (isAuto = false) => {
     isDisconnected.value = true;
   });
 
-  // 主动唤醒 (Visibility API)
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
       if (socket && !socket.connected) {
@@ -799,7 +773,6 @@ const joinRoom = (isAuto = false) => {
     }
   });
 
-  // 房间状态更?
   socket.on('room_update', (data) => {
     players.value = data.players;
     if (data.settings && data.settings.selectedRoles) {
@@ -813,9 +786,8 @@ const joinRoom = (isAuto = false) => {
     }
   });
 
-  // 阿瓦隆特定事?
   socket.on('avalon_game_started', (data) => {
-    appState.value = 'PLAYING'; // 强制切入游戏中状?
+    appState.value = 'PLAYING';
     avalonState.value = {
       role: data.role,
       phase: data.phase,
@@ -840,7 +812,7 @@ const joinRoom = (isAuto = false) => {
     if (data.proposedTeam) {
       avalonState.value.proposedTeam = data.proposedTeam;
     } else if (data.phase === 'team_building') {
-      avalonState.value.proposedTeam = []; // 清空之前的提?
+      avalonState.value.proposedTeam = []; 
     }
   });
 
@@ -861,7 +833,6 @@ const joinRoom = (isAuto = false) => {
     gameResult.value = { winner: data.winner, summary: data.reason, exiledPlayers: [], finalRoles: data.finalRoles || [], timeline: [] };
   });
 
-  // 游戏开始事?
   socket.on('game_started', (data) => {
     appState.value = 'NIGHT';
     myInitialRole.value = data.initialRole;
@@ -869,11 +840,10 @@ const joinRoom = (isAuto = false) => {
 
     playSound('night');
     if (isHost.value) {
-      speak("天黑请闭眼，大家请确认自己的底牌?");
+      speak("天黑请闭眼，大家请确认自己的底牌。");
     }
   });
 
-  // 夜间进度更新
   socket.on('night_action_update', (data) => {
     currentNightRole.value = data.activeRole;
     isMyTurn.value = false;
@@ -889,10 +859,9 @@ const joinRoom = (isAuto = false) => {
     }
   });
 
-  // 角色行动时间到，通知闭眼并等待（后端会停?4 秒）
   socket.on('night_action_close', (data) => {
     isMyTurn.value = false;
-    currentNightRole.value = 'transition'; // UI 会显?'...'
+    currentNightRole.value = 'transition'; 
     
     if (isHost.value) {
       const roleName = ROLE_NAMES[data.closedRole];
@@ -902,33 +871,29 @@ const joinRoom = (isAuto = false) => {
     }
   });
 
-  // 属于我的回合
   socket.on('your_turn', (data) => {
     isMyTurn.value = true;
-    nightViewData.value = data; // 保存视野信息（如狼队友位置）
-    playSound('myTurn');        // 急促三连音，高辨识度
-    uni.vibrateShort();         // 手机震动提示
+    nightViewData.value = data; 
+    playSound('myTurn');        
+    uni.vibrateShort();         
   });
 
-  // 白天开?
   socket.on('day_started', (data) => {
     appState.value = 'DAY';
     playSound('day');
     if (isHost.value) {
-      speak("天亮了，请大家睁眼，开始自由讨论?");
+      speak("天亮了，请大家睁眼，开始自由讨论。");
     }
   });
 
-  // 投票开?
   socket.on('voting_started', () => {
     appState.value = 'VOTING';
     playSound('vote');
     if (isHost.value) {
-      speak("讨论时间结束，请所有人在手机上投票?");
+      speak("讨论时间结束，请所有人在手机上投票。");
     }
   });
 
-  // 游戏结束结算
   socket.on('game_ended', (result) => {
     appState.value = 'END';
     gameResult.value = result;
@@ -937,7 +902,7 @@ const joinRoom = (isAuto = false) => {
 
   socket.on('game_aborted', (data) => {
     uni.showModal({
-      title: '游戏已中?',
+      title: '游戏已中止',
       content: data.reason,
       showCancel: false
     });
@@ -949,7 +914,6 @@ const joinRoom = (isAuto = false) => {
     appState.value = 'WAITING';
   });
 
-  // 收到报错
   socket.on('error_msg', (msg) => {
     uni.showToast({ title: msg, icon: 'none' });
   });
@@ -970,7 +934,7 @@ const applyRecommend = (n) => {
   if (RECOMMENDED_BOARDS[n]) {
     selectedRoles.value = [...RECOMMENDED_BOARDS[n]];
     socket.emit('update_settings', { sessionId: sessionId.value, roomId: roomId.value, settings: { selectedRoles: selectedRoles.value } });
-    uni.showToast({ title: `已应?${n}人局 智能推荐`, icon: 'success' });
+    uni.showToast({ title: `已应用 ${n} 人局智能推荐`, icon: 'success' });
   }
 };
 
@@ -979,12 +943,24 @@ const getRoleCount = (roleId) => {
 };
 
 const changeRoleCount = (roleId, delta) => {
-  if (delta === 1) {
-    selectedRoles.value.push(roleId);
-  } else if (delta === -1) {
-    const idx = selectedRoles.value.indexOf(roleId);
-    if (idx !== -1) {
-      selectedRoles.value.splice(idx, 1);
+  if (roleId === 'mason') {
+    if (delta === 1) {
+      selectedRoles.value.push(roleId);
+      selectedRoles.value.push(roleId);
+    } else if (delta === -1) {
+      let idx1 = selectedRoles.value.indexOf(roleId);
+      if (idx1 !== -1) selectedRoles.value.splice(idx1, 1);
+      let idx2 = selectedRoles.value.indexOf(roleId);
+      if (idx2 !== -1) selectedRoles.value.splice(idx2, 1);
+    }
+  } else {
+    if (delta === 1) {
+      selectedRoles.value.push(roleId);
+    } else if (delta === -1) {
+      const idx = selectedRoles.value.indexOf(roleId);
+      if (idx !== -1) {
+        selectedRoles.value.splice(idx, 1);
+      }
     }
   }
   socket.emit('update_settings', { sessionId: sessionId.value, roomId: roomId.value, settings: { selectedRoles: selectedRoles.value } });
@@ -994,7 +970,7 @@ const startGame = () => {
   if (gameType.value === 'onuw') {
     const targetCount = players.value.length + 3;
     if (selectedRoles.value.length !== targetCount) {
-      return uni.showToast({ title: `牌数必须?${targetCount} 张！(当前 ${selectedRoles.value.length} ??`, icon: 'none' });
+      return uni.showToast({ title: `牌数必须为 ${targetCount} 张！(当前 ${selectedRoles.value.length} 张)`, icon: 'none' });
     }
   }
   socket.emit('start_game', { sessionId: sessionId.value, roomId: roomId.value });
@@ -1002,7 +978,7 @@ const startGame = () => {
 
 const leaveRoom = () => {
   uni.showModal({
-    title: '退出房?',
+    title: '退出房间',
     content: '中途退出将导致当前游戏异常，确认退出吗?',
     success: (res) => {
       if (res.confirm) {
@@ -1051,7 +1027,7 @@ const doTroublemaker = () => {
   if (tmP1.value && tmP2.value && tmP1.value.seatNumber !== tmP2.value.seatNumber) {
     submitNightAction({ type: 'SWAP_PLAYERS', targetSeats: [tmP1.value.seatNumber, tmP2.value.seatNumber] });
   } else {
-    uni.showToast({ title: '请选择两名不同的玩?', icon: 'none' });
+    uni.showToast({ title: '请选择两名不同的玩家', icon: 'none' });
   }
 };
 
@@ -1064,15 +1040,14 @@ const submitNightAction = (actionData) => {
     if (res && res.success !== false) {
       isMyTurn.value = false;
       
-      // 处理并弹窗显示技能结?
       if (res.seenRole) {
         uni.showModal({ title: '查看结果', content: `你看到的底牌是：${ROLE_NAMES[res.seenRole]}`, showCancel: false });
       } else if (res.seenRoles) {
-        uni.showModal({ title: '查看结果', content: `你看到中央的两张牌是： 和 ${ROLE_NAMES[res.seenRoles[1]]}`, showCancel: false });
+        uni.showModal({ title: '查看结果', content: `你看到中央的两张牌是：${ROLE_NAMES[res.seenRoles[0]]} 和 ${ROLE_NAMES[res.seenRoles[1]]}`, showCancel: false });
       } else if (res.newRole) {
-        uni.showModal({ title: '抢夺成功', content: `你换回的新底牌是：`, showCancel: false });
+        uni.showModal({ title: '抢夺成功', content: `你换回的新底牌是：${ROLE_NAMES[res.newRole] || '未知'}`, showCancel: false });
       } else {
-        uni.showToast({ title: '操作已提?', icon: 'success' });
+        uni.showToast({ title: '操作已提交', icon: 'success' });
       }
     } else {
       uni.showToast({ title: res.error || '操作失败', icon: 'none' });
@@ -1090,12 +1065,11 @@ const submitVote = (targetseatNumber) => {
     roomId: roomId.value, 
     voteTarget: targetseatNumber 
   });
-  uni.showToast({ title: '投票已提?', icon: 'success' });
-  // 可以切换到一个等待其他人投票的状态，此处简化处?
+  uni.showToast({ title: '投票已提交', icon: 'success' });
 };
 </script>
 
-<style>
+<style scoped>
 .container { padding: 40rpx; min-height: 100vh; background-color: #f5f5f5; }
 .header { width: 100%; margin-bottom: 40rpx; display: flex; flex-direction: column; }
 .header-lobby { text-align: center; }
@@ -1212,7 +1186,7 @@ const submitVote = (targetseatNumber) => {
 
 .role-card-3d { 
   width: 320rpx; 
-  height: 448rpx; /* 5:7 比例 */
+  height: 448rpx;
   background: #2c3e50; 
   border-radius: 20rpx; 
   display: flex; 
@@ -1256,7 +1230,6 @@ const submitVote = (targetseatNumber) => {
 .mask-title { font-size: 40rpx; font-weight: bold; margin-bottom: 20rpx; color: #2c3e50; }
 .mask-sub { font-size: 28rpx; color: #7f8c8d; text-align: center; line-height: 1.5; }
 
-/* 夜间面板显示/收起按钮 */
 .show-panel-btn {
   width: 100%;
   background: #2c3e50;
@@ -1277,7 +1250,6 @@ const submitVote = (targetseatNumber) => {
   border: none;
 }
 
-/* 角色图鉴样式 */
 .guide-float-btn {
   position: fixed;
   top: 40rpx;
@@ -1299,7 +1271,6 @@ const submitVote = (targetseatNumber) => {
   font-weight: bold;
 }
 
-/* 音效测试按钮样式 */
 .audio-test-btn {
   position: fixed;
   top: 40rpx;
@@ -1395,7 +1366,7 @@ const submitVote = (targetseatNumber) => {
 
 .avalon-sprite {
   background-image: url('/static/avalon-sprite.jpg');
-  background-size: 400% 365.5%; /* Specific scaling for avalon sprite grid */
+  background-size: 400% 365.5%;
   flex-shrink: 0;
 }
 
@@ -1493,7 +1464,6 @@ const submitVote = (targetseatNumber) => {
   padding-left: 8rpx;
 }
 
-/* 断线重连遮罩样式 */
 .disconnect-mask {
   position: fixed;
   top: 0;

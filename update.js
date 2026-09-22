@@ -1,4 +1,49 @@
-// 角色图鉴数据字典
+const fs = require('fs');
+
+// 1. Edit index.vue
+let indexVue = fs.readFileSync('frontend/src/pages/index/index.vue', 'utf8');
+
+indexVue = indexVue.replace(/mason:\s*'共济会'/, "mason: '守夜人'");
+indexVue = indexVue.replace(/<!--\s*共济会\s*-->/g, "<!-- 守夜人 -->");
+indexVue = indexVue.replace(/你的共济会队友:/g, "你的守夜人队友是:");
+indexVue = indexVue.replace(/你是唯一的共济会成员/g, "你是唯一的守夜人");
+
+const newChangeRoleCount = `const changeRoleCount = (roleId, delta) => {
+  if (roleId === 'mason') {
+    if (delta === 1) {
+      selectedRoles.value.push(roleId);
+      selectedRoles.value.push(roleId);
+    } else if (delta === -1) {
+      let idx1 = selectedRoles.value.indexOf(roleId);
+      if (idx1 !== -1) selectedRoles.value.splice(idx1, 1);
+      let idx2 = selectedRoles.value.indexOf(roleId);
+      if (idx2 !== -1) selectedRoles.value.splice(idx2, 1);
+    }
+  } else {
+    if (delta === 1) {
+      selectedRoles.value.push(roleId);
+    } else if (delta === -1) {
+      const idx = selectedRoles.value.indexOf(roleId);
+      if (idx !== -1) {
+        selectedRoles.value.splice(idx, 1);
+      }
+    }
+  }
+  socket.emit('update_settings', { sessionId: sessionId.value, roomId: roomId.value, settings: { selectedRoles: selectedRoles.value } });
+};`;
+
+// Use index of to replace safely
+const startIdx = indexVue.indexOf('const changeRoleCount = (roleId, delta) => {');
+if (startIdx !== -1) {
+    const endIdx = indexVue.indexOf('};', indexVue.indexOf('socket.emit(\'update_settings\'', startIdx)) + 2;
+    indexVue = indexVue.substring(0, startIdx) + newChangeRoleCount + indexVue.substring(endIdx);
+}
+
+fs.writeFileSync('frontend/src/pages/index/index.vue', indexVue, 'utf8');
+console.log('index.vue updated');
+
+// 2. Rewrite rolesDictionary.js
+const rolesDict = `// 角色图鉴数据字典
 export const ROLES_DICTIONARY = {
   werewolf: {
     name: '狼人',
@@ -196,3 +241,7 @@ export const AVALON_ROLES_DICTIONARY = {
     advancedTip: '配合队友投出失败票，但要注意隐藏自己。'
   }
 };
+`;
+
+fs.writeFileSync('frontend/src/rolesDictionary.js', rolesDict, 'utf8');
+console.log('rolesDictionary.js updated');

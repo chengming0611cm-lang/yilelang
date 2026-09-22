@@ -361,7 +361,7 @@ const toggleTeamMember = (seatNumber) => {
     if (selectedTeam.value.length < props.avalonState.currentQuestSize) {
       selectedTeam.value.push(seatNumber);
     } else {
-      uni.showToast({ title: `璇ヤ换鍔℃渶澶氶渶瑕 ${props.avalonState.currentQuestSize} 浜篳, icon: 'none' });
+        uni.showToast({ title: 'Max players reached', icon: 'none' });
     }
   }
 };
