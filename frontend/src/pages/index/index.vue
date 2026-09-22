@@ -405,6 +405,7 @@ import { ROLES_DICTIONARY, CAMP_COLORS, AVALON_ROLES_DICTIONARY } from '../../ro
 import AvalonGameView from '../../components/AvalonGameView.vue';
 import ShareQrcodeModal from '../../components/ShareQrcodeModal.vue';
 import LoginView from '../../components/LoginView.vue';
+import PlayerAvatar from '../../components/PlayerAvatar.vue';
 
 // 角色字典映射 (一夜狼和阿瓦隆彻底分离防止覆盖)
 const ONUW_ROLE_NAMES = {
