@@ -236,8 +236,8 @@
       <view class="flip-container mt">
         <view class="flipper" :class="{ 'is-flipped': nightPanelOpen }">
           <!-- 卡牌背面 (默认状态) -->
-          <view class="front card-back-design" @click.stop="nightPanelOpen = true">
-            <view class="card-back-inner"></view>
+          <view class="front" @click.stop="nightPanelOpen = true">
+            <image :src="'/static/cards/back' + randomBackIndex + '.png'" style="width: 100%; height: 100%; border-radius: 20rpx; box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.5);" />
           </view>
           
           <!-- 卡牌正面 -->
@@ -524,6 +524,7 @@ const onAvalonAction = (actionData) => {
 // 角色图鉴相关
 const showRoleGuide = ref(false);
 const nightPanelOpen = ref(false);
+const randomBackIndex = ref(1);
 
 // 夜间状态
 const myInitialRole = ref('');
@@ -875,6 +876,7 @@ const joinRoom = (isAuto = false) => {
     appState.value = 'NIGHT';
     myInitialRole.value = data.initialRole;
     nightPanelOpen.value = false;
+    randomBackIndex.value = Math.floor(Math.random() * 8) + 1;
     
     isMyTurn.value = false;
 
