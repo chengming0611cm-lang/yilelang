@@ -699,7 +699,7 @@ const joinRoom = (isAuto = false) => {
   }
 
   const socketUrl = window.location.port === '5173' ? 'http://localhost:3000' : window.location.origin;
-  socket = io(socketUrl, { query: {}, transports: ['polling', 'websocket'], extraHeaders: { 'Bypass-Tunnel-Reminder': 'true' } });
+  socket = io(socketUrl, { query: {}, transports: ['polling'], extraHeaders: { 'Bypass-Tunnel-Reminder': 'true' } });
 
   socket.on('connect', () => {
     if (isDisconnected.value) {

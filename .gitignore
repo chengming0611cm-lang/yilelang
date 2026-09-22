@@ -4,3 +4,5 @@ node_modules/
 frontend/dist/
 .env
 pinggy_url.txt
+
+cloudflared.exe
