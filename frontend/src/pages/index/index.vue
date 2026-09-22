@@ -876,7 +876,7 @@ const joinRoom = (isAuto = false) => {
     appState.value = 'NIGHT';
     myInitialRole.value = data.initialRole;
     nightPanelOpen.value = false;
-    randomBackIndex.value = Math.floor(Math.random() * 8) + 1;
+    randomBackIndex.value = Math.floor(Math.random() * 5) + 1;
     
     isMyTurn.value = false;
 
