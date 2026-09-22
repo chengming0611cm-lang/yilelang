@@ -1,0 +1,201 @@
+?// 角色图鉴数据字典
+export const ROLES_DICTIONARY = {
+  werewolf: {
+    name: '狼人',
+    image: '/static/cards/werewolf.png',
+    spritePosition: '33.333% 0%',
+    color: '#c0392b',
+    camp: '狼人阵营',
+    description: '每晚醒来，与同伴确认身份。如场上只有一只狼，可查看中央一张底牌�?',
+    advancedTip: '高阶玩法：如果是孤狼，优先查看中央牌确认是否有神职；如果有狼队友，白天可互相打配合，但注意不要过于默契暴露身份。发言时可以假装预言家或其他神职混淆视听'
+  },
+
+  minion: {
+    name: '爪牙',
+    image: '/static/cards/minion.png',
+    spritePosition: '100% 0%',
+    color: '#8e44ad',
+    camp: '狼人阵营',
+    description: '每晚醒来，得知场上所有狼人的位置，但狼人不知道你的身份�?',
+    advancedTip: '高阶玩法：你的任务是帮助狼人获胜。白天可以假跳神职为狼人背书，或故意引导好人投错票。即使你被投死，只要狼人活着就算胜利。注意不要过早暴露自己的爪牙身份'
+  },
+
+  mason: {
+    name: '共济�?',
+    image: '/static/cards/mason.png',
+    spritePosition: '0% 33.333%',
+    color: '#16a085',
+    camp: '好人阵营',
+    description: '每晚醒来，与另一名共济会确认身份。如果你是唯一的共济会，则无同伴�?',
+    advancedTip: '高阶玩法：与同伴提前约定暗号（如发言顺序、关键词），白天通过暗号互相确认。如果是单共济会，可以大胆报身份占据发言主动权。小心被捣蛋鬼或强盗换牌后失去身份�?'
+  },
+
+  seer: {
+    name: '预言�?',
+    image: '/static/cards/seer.png',
+    spritePosition: '66.666% 33.333%',
+    color: '#2980b9',
+    camp: '好人阵营',
+    description: '每晚醒来，可以查看一名玩家的底牌，或查看中央两张底牌',
+    advancedTip: '高阶玩法：验人优先选择发言可疑的玩家；如果局势不明朗，查中央牌可以排除狼坑。白天报验人信息时，注意观察被验玩家的反应，真狼会露出破绽。可以故意藏一手验人结果，后置发言打爆狼人'
+  },
+
+  robber: {
+    name: '强盗',
+    image: '/static/cards/robber.png',
+    spritePosition: '100% 33.333%',
+    color: '#d35400',
+    camp: '好人阵营（可能变狼）',
+    description: '每晚醒来，可以选择一名玩家交换底牌，并查看自己的新底牌�?',
+    advancedTip: '高阶玩法：优先抢夺发言靠前的可疑玩家，如果抢到狼牌则转换阵营。白天可以直接报出抢夺对象和结果，也可以隐藏身份钓鱼执法。如果抢到狼牌，可以反水帮狼队或继续伪装好人'
+  },
+
+  troublemaker: {
+    name: '捣蛋�?',
+    image: '/static/cards/troublemaker.png',
+    spritePosition: '0% 66.666%',
+    color: '#e67e22',
+    camp: '好人阵营',
+    description: '每晚醒来，可以交换两名其他玩家的底牌（不查看）�?',
+    advancedTip: '高阶玩法：优先交换发言靠前的两名可疑玩家，制造混乱。白天可以晚一点报身份，先听其他人发言，如果有人报的身份和你换牌后矛盾，说明他在说谎。也可以假装没换牌，观察场上反应'
+  },
+
+  drunk: {
+    name: '酒鬼',
+    image: '/static/cards/drunk.png',
+    spritePosition: '33.333% 66.666%',
+    color: '#95a5a6',
+    camp: '好人阵营（可能变狼）',
+    description: '每晚醒来，必须盲换中央一张底牌，不知道换到的新身份�?',
+    advancedTip: '高阶玩法：白天坦白酒鬼身份和换牌位置，帮助其他玩家推理。如果有预言家查中央牌，可以对比信息排除狼坑。注意你可能换到狼牌，要根据场上信息判断自己的新身份'
+  },
+
+  insomniac: {
+    name: '失眠�?',
+    image: '/static/cards/insomniac.png',
+    spritePosition: '66.666% 66.666%',
+    color: '#34495e',
+    camp: '好人阵营（可能被换成狼）',
+    description: '在所有夜间操作结束后醒来，查看自己最终的底牌（可能已被换）�?',
+    advancedTip: '高阶玩法：你拥有最准确的自身信息。白天可以坦白失眠者身份和最终底牌，如果发现被换牌，可以反推是谁换了你。如果最终变成狼，可以选择继续伪装或反水帮狼队'
+  },
+
+  villager: {
+    name: '平民',
+    image: '/static/cards/villager.png',
+    spritePosition: '100% 66.666%',
+    color: '#7f8c8d',
+    camp: '好人阵营',
+    description: '没有特殊能力，通过逻辑推理和发言找出狼人',
+    advancedTip: '高阶玩法：仔细听所有人的发言，寻找逻辑矛盾和可疑点。可以假装神职引诱狼人跳反，也可以低调发言避免成为狼人的反扑目标。投票时果断站队，不要弃权�?'
+  },
+
+  hunter: {
+    name: '猎人',
+    image: '/static/cards/hunter.png',
+    spritePosition: '66.666% 100%',
+    color: '#27ae60',
+    camp: '好人阵营',
+    description: '如果被投票放逐，同时带走得票第二高的玩家',
+    advancedTip: '高阶玩法：白天适时报出猎人身份震慑狼人，避免被集火。但也不要太早暴露，容易成为捣蛋鬼或强盗的目标。如果确定要死，拉票给狼人同归于尽�?'
+  },
+
+  tanner: {
+    name: '皮匠',
+    image: '/static/cards/tanner.png',
+    spritePosition: '100% 100%',
+    color: '#e74c3c',
+    camp: '独立阵营',
+    description: '独立阵营，只有自己被投死才能获胜',
+    advancedTip: '高阶玩法：适度表现可疑，但不能太明显否则会被识破。可以假跳神职后故意露出破绽，或制造逻辑矛盾引诱别人投你。注意不要演过火导致狼人也投你，要精准拉好人的票'
+  },
+
+  doppelganger: {
+    name: '化身幽灵',
+    image: '/static/cards/doppelganger.png',
+    spritePosition: '0% 0%',
+    color: '#bdc3c7',
+    camp: '任意阵营',
+    description: '选择一名玩家化身成他的身份',
+    advancedTip: '高阶玩法：暂未实装，但作为保留身份�?'
+  }
+};
+
+// 角色阵营颜色映射
+export const CAMP_COLORS = {
+  '狼人阵营': '#c0392b',
+  '好人阵营': '#2980b9',
+  '好人阵营（可能变狼）': '#d35400',
+  '正义阵营': '#3b82f6',
+  '邪恶阵营': '#ef4444',
+  '好人阵营（可能被换成狼）': '#f39c12',
+  '独立阵营': '#8e44ad',
+  '取决于复制的角色': '#9b59b6'
+};
+
+export const AVALON_ROLES_DICTIONARY = {
+  merlin: {
+    name: '梅林',
+    spritePosition: '0% 20%',
+    color: '#3b82f6',
+    camp: '正义阵营',
+    description: '能看见邪恶阵营（除了莫德雷德），但必须隐藏好自己，因为一旦被刺客猜中身份，正义阵营立刻判负�?',
+    advancedTip: '高阶提示：通过投票行为暗示其他正义玩家，但绝不能表现得全知全能'
+  },
+  percival: {
+    name: '派西维尔',
+    spritePosition: '33.333% 20%',
+    color: '#60a5fa',
+    camp: '正义阵营',
+    description: '能看见梅林和莫甘娜，但无法区分谁是谁',
+    advancedTip: '高阶提示：你需要通过观察两人的发言和投票行为来分辨真假梅林，并为真正的梅林打掩护�?'
+  },
+  loyal: {
+    name: '亚瑟的忠�?',
+    spritePosition: '66.666% 20%',
+    color: '#93c5fd',
+    camp: '正义阵营',
+    description: '普通的正义阵营成员，没有任何特殊信息�?',
+    advancedTip: '高阶提示：你的任务是通过逻辑和投票找出队友，同时不要给梅林添乱，必要时可以假装自己是有身份的人来挡刀'
+  },
+  morgana: {
+    name: '莫甘�?',
+    spritePosition: '0% 100%',
+    color: '#ef4444',
+    camp: '邪恶阵营',
+    description: '在派西维尔的视野中会显示为梅林，任务是迷惑派西维尔�?',
+    advancedTip: '高阶提示：你需要表现得像一个正在指挥的正义神职，诱导派西维尔信任你，从而破坏任务�?'
+  },
+  assassin: {
+    name: '刺客',
+    spritePosition: '33.333% 100%',
+    color: '#b91c1c',
+    camp: '邪恶阵营',
+    description: '如果在发车阶段邪恶阵营失败，你有最后一次机会通过刺杀梅林来翻盘�?',
+    advancedTip: '高阶提示：在游戏中仔细观察谁像是知道所有信息的梅林，谁又像是挡刀的派西维尔�?'
+  },
+  oberon: {
+    name: '奥伯�?',
+    spritePosition: '66.666% 100%',
+    color: '#7f1d1d',
+    camp: '邪恶阵营',
+    description: '对邪恶阵营不可见，你也不知道谁是你的邪恶同伴',
+    advancedTip: '高阶提示：由于没有任何信息，你很容易被当成好人，但也可能被队友误投。尽量制造混乱�?'
+  },
+  mordred: {
+    name: '莫德雷德',
+    spritePosition: '100% 100%',
+    color: '#450a0a',
+    camp: '邪恶阵营',
+    description: '对梅林隐身，梅林不知道你的存在�?',
+    advancedTip: '高阶提示：因为梅林看不见你，你可以大胆伪装成正义阵营，甚至带头冲锋�?'
+  },
+  minion: {
+    name: '莫德雷德的爪�?',
+    spritePosition: '100% 100%',
+    color: '#dc2626',
+    camp: '邪恶阵营',
+    description: '普通的邪恶阵营成员，知道谁是队友�?',
+    advancedTip: '高阶提示：尽职尽责地破坏任务并掩护重要的邪恶神职'
+  }
+};

@@ -1,0 +1,25 @@
+﻿with open('D:/AI/cunchu/za/one/frontend/src/pages/index/index.vue', 'r', encoding='utf-8') as f:
+    content = f.read()
+
+content = content.replace("??    case 'night':", "??\n    case 'night':")
+content = content.replace("??    case 'roleTurn':", "??\n    case 'roleTurn':")
+content = content.replace("??    case 'myTurn':", "??\n    case 'myTurn':")
+content = content.replace("??    case 'day':", "??\n    case 'day':")
+content = content.replace("??    case 'vote':", "??\n    case 'vote':")
+content = content.replace("??    case 'confirm':", "??\n    case 'confirm':")
+content = content.replace("??    case 'end':", "??\n    case 'end':")
+content = content.replace("??const testAudio", "??\nconst testAudio")
+content = content.replace("??const nightPanelOpen", "??\nconst nightPanelOpen")
+content = content.replace("??const myInitialRole", "??\nconst myInitialRole")
+content = content.replace("??let audioCtx", "??\nlet audioCtx")
+content = content.replace("??const speak", "??\nconst speak")
+content = content.replace("??const savedNickname", "??\nconst savedNickname")
+content = content.replace("??  const savedNickname", "??\n  const savedNickname")
+content = content.replace("??  uni.setStorageSync", "??\n  uni.setStorageSync")
+content = content.replace("??  socket.on(", "??\n  socket.on(")
+content = content.replace("??    avalonState.value", "??\n    avalonState.value")
+content = content.replace("??    currentNightRole.value", "??\n    currentNightRole.value")
+content = content.replace("??  };", "??\n  };")
+
+with open('D:/AI/cunchu/za/one/frontend/src/pages/index/index.vue', 'w', encoding='utf-8') as f:
+    f.write(content)

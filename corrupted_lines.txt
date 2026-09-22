@@ -1,0 +1,203 @@
+﻿3: <!-- ȫ�ֶ����������� -->
+7: <text style="font-size: 36rpx; font-weight: bold; margin-top: 20rpx;">����Ͽ������ڳ�����??..</text>
+12: <!-- ������״̬�����ҽṹ -->
+14: <!-- ���/���У����ѷ���ŷ��� -->
+16: <text class="room-pill-text">����?? {{ roomId }} (�����??</text>
+19: <!-- �Ҳࣺ��������??-->
+21: <text v-if="appState !== 'WAITING' && isHost" class="header-btn danger-text" @click="forceReturnLobby">ǿ���ؿ�</text>
+22: <text class="header-btn ghost-btn" @click="leaveRoom">�˳���??/text>
+27: <!-- ��ɫͼ��������ť -->
+35: <!-- ��Ч���԰�ť��WAITING/NIGHT/DAY/VOTING ״̬��ʾ�� -->
+43: <!-- ��ɫͼ������ -->
+47: <text class="guide-title">?? ��ɫͼ��</text>
+51: <!-- �ҵĽ�ɫ���̶��ڶ��������������??-->
+62: <view class="my-role-badge">������</view>
+66: <text class="tip-label">?? �߽���ʾ</text>
+73: <!-- �������н�??-->
+75: <text class="section-title">�������н�??(??{{ selectedRoles.length }} ??</text>
+96: <!-- ==================== LOBBY (�����׶�) ==================== -->
+106: <!-- ==================== WAITING (׼���׶�) ==================== -->
+108: <text class="room-title">����?? {{ roomId }}</text>
+111: <text class="sub-title">����б� ({{ players.length }}??</text>
+114: <text v-if="p.isHost" class="host-tag">(����)</text>
+115: <text v-else-if="p.isReady" style="color: #27ae60; font-size: 24rpx; margin-left: 10rpx; font-weight: bold;">(��׼????</text>
+116: <text v-else style="color: #7f8c8d; font-size: 24rpx; margin-left: 10rpx;">(δ׼??</text>
+117: <text v-if="p.offline" style="color: #e74c3c; font-size: 24rpx; margin-left: 10rpx; font-weight: bold;">(����)</text>
+123: <text class="sub-title">��ǰѡ����Ϸ??/text>
+125: <label><radio value="onuw" :checked="gameType === 'onuw'" /> һҹ�ռ���??/label>
+126: <label><radio value="avalon" :checked="gameType === 'avalon'" /> ����??/label>
+130: <!-- һҹ������ -->
+132: <text class="sub-title">���ð��� (��ǰ�Ѽ�??{{ players.length }} �ˣ�ʵ����??{{ players.length + 3 }} ����)</text>
+133: <text style="font-size: 28rpx; color: #e74c3c; font-weight: bold;">��ǰ��?? {{ selectedRoles.length }} ??/text>
+136: <text class="sub-title" style="margin-bottom: 10rpx;">���ܰ����Ƽ�:</text>
+154: <!-- ����¡����ռ??-->
+156: <text class="sub-title">����¡������??/text>
+158: <label style="display: block; margin-bottom: 10rpx;"><checkbox checked disabled /> ÷�� & ����ά��</label>
+159: <label style="display: block; margin-bottom: 10rpx;"><checkbox checked disabled /> Ī��??& �̿�</label>
+160: <label style="display: block; margin-bottom: 10rpx;"><checkbox disabled /> �²�??/label>
+161: <label style="display: block; margin-bottom: 10rpx;"><checkbox disabled /> Ī���׵�</label>
+162: <text style="font-size: 24rpx; color: #888; margin-top: 10rpx; display: block;">ϵͳ������������5-10�ˣ��Զ�������˺ͻ�����Ӫ������������������������??/text>
+167: {{ allReady ? '��ʼ��?? : '�ȴ��������׼��...' }}
+172: <text class="sub-title" style="font-weight: bold; color: #e67e22;">��ǰ��Ϸ��{{ gameType === 'onuw' ? 'һҹ�ռ���?? : '����?? }}</text>
+175: {{ myReadyStatus ? 'ȡ��׼��' : '׼��' }}
+180: <!-- ==================== GAME PHASE (��Ϸ���н׶�) ==================== -->
+182: <!-- ==================== END (���㸴��) ==================== -->
+184: <text class="night-title" style="color: #e74c3c;">?? ��Ϸ����</text>
+185: <text style="font-size: 40rpx; font-weight: bold; margin: 20rpx 0;">{{ gameResult?.winner === 'good' ? '������Ӫ' : (gameResult?.winner === 'evil' ? 'а����Ӫ' : gameResult?.winner) }} ��ʤ??/text>
+189: <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">��������??</text>
+194: <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">?? ������յ�??</text>
+204: <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">?? ȫ��ҹ��ʱ���߸�??</text>
+212: <button v-if="isHost" class="btn mt confirm-btn" type="primary" @click="forceReturnLobby">���ش�����������һ��</button>
+213: <button v-else class="btn mt confirm-btn" type="default" @click="appState = 'WAITING'">���ش���׼����һ��</button>
+216: <!-- ONUW ��Ϸ��ͼ -->
+219: <!-- ==================== NIGHT (ҹ��׶�) ==================== -->
+223: <text class="night-title">?? ҹĻ����</text>
+224: <text class="night-info">��ǰ�ж�: {{ ROLE_NAMES[currentNightRole] || '...' }}</text>
+232: <text class="card-label mt" style="font-size: 28rpx; color: #888;">���ĳ�ʼ����</text>
+234: <button class="hide-panel-btn" size="mini" @click.stop="nightPanelOpen = false">?? ���𣨷�����</button>
+236: <!-- �����ҵĻغ� -->
+238: <text class="action-title">��ִ�в�??/text>
+240: <!-- ���� -->
+243: <text>�����ͬ����??/text>
+244: <text v-for="w in nightViewData.werewolfMates" :key="w">??��??{{ w }} </text>
+247: <text>���ǹ��ǡ�����Բ鿴�����һ����??/text>
+256: <!-- Ԥ��??-->
+258: <text>�������һ����ҵ��ƣ��������������??/text>
+261: <button size="mini" type="primary">����??/button>
+271: <!-- ǿ�� -->
+273: <text>ѡ��һ����ҽ������ƣ����鿴�µ��ƣ���</text>
+275: <button class="mt" size="mini" type="primary">ѡ����Ҳ���??/button>
+279: <!-- ����??-->
+281: <text>�����ѡ�񽻻�����������ҵĵ��ƣ�</text>
+283: <button class="mt" size="mini">���1: {{ tmP1 ? tmP1.nickname : 'ѡ��' }}</button>
+286: <button class="mt" size="mini">���2: {{ tmP2 ? tmP2.nickname : 'ѡ��' }}</button>
+288: <button class="mt" size="mini" type="primary" @click.stop="doTroublemaker" :disabled="!tmP1 || !tmP2">ȷ�Ͻ���</button>
+291: <!-- �ƹ� -->
+293: <text>ä�������һ����??/text>
+301: <!-- ʧ��??-->
+303: <text>����һ�����ĵ�ǰ���Ʊ���ˣ�</text>
+309: <!-- צ�� -->
+311: <text>���ϵ�������??/text>
+312: <text v-for="w in nightViewData.werewolves" :key="w">??��??{{ w }} </text>
+313: <text v-if="!nightViewData.werewolves || nightViewData.werewolves.length === 0">����û������??/text>
+316: <!-- ����??-->
+318: <text>��Ĺ��û�ͬ����??/text>
+319: <text v-for="m in nightViewData.masonMates" :key="m">??��??{{ m }} </text>
+320: <text v-if="!nightViewData.masonMates || nightViewData.masonMates.length === 0">����Ψһ�Ĺ��û�??/text>
+324: <button class="btn" type="default" @click.stop="submitNightAction({ type: 'NONE' })">ȷ�����</button>
+327: <button class="btn" type="default" @click.stop="submitNightAction({ type: 'NONE' })">�����ж�</button>
+331: <!-- ä��??�ȴ��غ� -->
+333: <text class="action-title">��ȴ��������ж�...</text>
+338: <button class="show-panel-btn" @click.stop="nightPanelOpen = true">?? ����鿴���ĵ������??/button>
+339: <text class="mask-sub">δ�����Ļغ�ʱ�������⻬����Ļ����αװ��������ֹ��¶���??/text>
+343: <!-- ==================== DAY (��������) ==================== -->
+345: <text class="day-title">???̫����������������</text>
+346: <text class="sub-title">��ͨ�����½�����Ѱ�����ˣ�</text>
+347: <text class="temp-text" style="margin-top: 40rpx;">(����ʱ�������Զ�����Ͷ??</text>
+348: <button class="btn mt" type="warn" v-if="isHost" @click="forceVote">������ǰ����ͶƱ</button>
+351: <!-- ==================== VOTING (ͶƱ�׶�) ==================== -->
+353: <text class="night-title">????ͶƱ�׶�</text>
+354: <text class="sub-title">��ѡ��һ����ҽ��з�??(����??</text>
+362: <text>??��??{{ p.seatNumber }} - {{ p.nickname }}</text>
+363: <button size="mini" type="primary" @click="submitVote(p.seatNumber)">ͶƱ</button>
+365: <button class="btn mt" type="default" @click="submitVote(-1)">��Ȩ</button>
+370: <!-- Avalon ��Ϸ��ͼ -->
+386: :gameName="gameType === 'onuw' ? 'һҹ�ռ���?? : '����??"
+401: // ��ɫ�ֵ�ӳ��
+403: werewolf: '����', minion: 'צ��', mason: '����??,
+404: seer: 'Ԥ��??, robber: 'ǿ��', troublemaker: '����??,
+405: drunk: '�ƹ�', insomniac: 'ʧ��??, villager: 'ƽ��',
+406: hunter: '����', tanner: 'Ƥ��', doppelganger: '��������',
+408: merlin: '÷��', percival: '����ά��', loyal: '��ɪ����??,
+409: morgana: 'Ī��??, assassin: '�̿�', oberon: '�²�??,
+410: mordred: 'Ī���׵�', minion: 'Ī���׵µ�צ??
+414: const gameType = ref('onuw'); // ��ǰ����ѡ������Ϸ��??const nickname = ref('');
+447: // �����л���Ϸ����
+470: // ��ɫͼ�����
+473: // ҹ����忪�أ��������??const nightPanelOpen = ref(false);
+475: // �������н�ɫֱ��ʹ??selectedRoles ??ROLES_DICTIONARY ��Ⱦ
+477: // ҹ��״??const myInitialRole = ref('');
+500: // ������ѡ��
+504: // ============ ��Чϵͳ ============
+505: // ʹ�� Web Audio API �ϳ���ʾ��������ⲿ��Ƶ�ļ�������Զ�������??let audioCtx = null;
+508: // ��ʼ����Ƶ�����ģ��������û���������ã�
+515: // iOS Safari ��??resume
+521: console.warn('��Ƶ��ʼ��ʧ??, e);
+525: // ���ŵ������
+532: // ���뵭�����ⱬ��
+543: // ������Ч����
+555: // ��ڣ��ͳ�������??    case 'night':
+560: // ��ɫ�ֻ������˫����ʾ�������˶�����������??    case 'roleTurn':
+564: // �ֵ��ң���������??+ ���У��߱�ʶ??    case 'myTurn':
+569: // ����������������??    case 'day':
+575: // ͶƱ����ʾ˫����??    case 'vote':
+581: // ����ȷ�ϣ��̴ٵ�??    case 'confirm':
+584: // ��Ϸ��������??    case 'end':
+592: // ��Ч�Լ죺����󲥷���ʾ�������״??const testAudio = () => {
+595: uni.showToast({ title: '���������֧����??, icon: 'none', duration: 2500 });
+605: speak('�����������');
+608: title: audioCtx.state === 'running' ? '��Ч�ѿ�?? : '������ֻ���??,
+614: // TTS �������������ר�ã�������������??const speak = (text) => {
+621: // �������٣�Ӫ�찲�������ص���Ϸ��Χ
+623: // ��΢ѹ�������ʹ����ӵ�??    msg.pitch = 0.8;
+626: // ѡ����ȵ����Բ�����ɫ������ѡ�����ɹ����԰�??zh-CN-YunyeNeural ������������
+629: let selectedVoice = voices.find(v => v.name.includes('Yunye') || v.name.includes('��Ұ'));
+643: console.warn('�������ʧ��', e);
+649: // ���˵��Լ������ڸ�Ԥ�Լҡ�ǿ����������ѡ��Ŀ��
+655: // ���ɻ��ȡΨһ SessionID ���ڶ�������
+663: // ��ȡ�ϴε��ǳƺͷ���??  const savedNickname = uni.getStorageSync('werewolf_nickname');
+669: // �Զ�����
+677: return uni.showToast({ title: '��������??, icon: 'none' });
+680: // ���浽���ػ�??  uni.setStorageSync('werewolf_nickname', nickname.value);
+684: // ���û��ֶ����ʱ��ʼ����Ƶ���ƹ�������Զ��������ƣ�
+687: // Ԥ�� TTS��iOS/Android ��Ҫ�û��������״ε��ò��ܺ����Զ�����
+693: } catch (e) { /* ����Ԥ��ʧ�� */ }
+697: // ������������� 3000������������ͬԴ
+703: // �����˶���������������ȡȫ������
+734: // ���ջָ�ʧ�ܣ�����Ϊ�������
+741: // �״μ���
+770: // �������� (Visibility API)
+779: // ����״̬��??  socket.on('room_update', (data) => {
+792: // ����¡�ض���??  socket.on('avalon_game_started', (data) => {
+793: appState.value = 'PLAYING'; // ǿ��������Ϸ��״??    avalonState.value = {
+817: avalonState.value.proposedTeam = []; // ���֮ǰ����??    }
+837: // ��Ϸ��ʼ��??  socket.on('game_started', (data) => {
+844: speak("�������ۣ������ȷ���Լ��ĵ���??);
+848: // ҹ����ȸ���
+859: speak(`${roleName}�������ۣ���ִ�����Ĳ�����`);
+864: // ��ɫ�ж�ʱ�䵽��֪ͨ���۲��ȴ�����˻�ͣ??4 �룩
+867: currentNightRole.value = 'transition'; // UI ����??'...'
+872: speak(`${roleName}������ۡ�`);
+877: // �����ҵĻغ�
+880: nightViewData.value = data; // ������Ұ��Ϣ�����Ƕ���λ�ã�
+881: playSound('myTurn');        // ������������߱�ʶ��
+882: uni.vibrateShort();         // �ֻ�����ʾ
+885: // ���쿪??  socket.on('day_started', (data) => {
+889: speak("�����ˣ��������ۣ���ʼ��������??);
+893: // ͶƱ��??  socket.on('voting_started', () => {
+897: speak("����ʱ������������������ֻ���ͶƱ??);
+901: // ��Ϸ��������
+910: title: '��Ϸ����??,
+922: // �յ�����
+943: uni.showToast({ title: `��Ӧ??${n}�˾� �����Ƽ�`, icon: 'success' });
+967: return uni.showToast({ title: `��������??${targetCount} �ţ�(��ǰ ${selectedRoles.value.length} ??`, icon: 'none' });
+975: title: '�˳���??,
+976: content: '��;�˳������µ�ǰ��Ϸ�쳣��ȷ���˳���??,
+990: title: 'ǿ���ؿ�',
+991: content: 'ȷ��ǿ�ƽ�����ǰ�Ծ֣�����ȫԱ���ش�����??,
+1000: // --- ҹ���ж������߼� ---
+1024: uni.showToast({ title: '��ѡ��������ͬ����??, icon: 'none' });
+1037: // �����������ʾ���ܽ�??      if (res.seenRole) {
+1038: uni.showModal({ title: '�鿴���', content: `�㿴���ĵ����ǣ�${ROLE_NAMES[res.seenRole]}`, showCancel: false });
+1040: uni.showModal({ title: '�鿴���', content: `�㿴���������������??{ROLE_NAMES[res.seenRoles[0]]} ??${ROLE_NAMES[res.seenRoles[1]]}`, showCancel: false });
+1042: uni.showModal({ title: '����ɹ�', content: `�㻻�ص��µ�����??{ROLE_NAMES[res.newRole]}`, showCancel: false });
+1044: uni.showToast({ title: '��������??, icon: 'success' });
+1047: uni.showToast({ title: res.error || '����ʧ��', icon: 'none' });
+1062: uni.showToast({ title: 'ͶƱ����??, icon: 'success' });
+1063: // �����л���һ���ȴ�������ͶƱ��״̬���˴��򻯴�??};
+1161: /* ҹ�����������ʽ */
+1183: height: 448rpx; /* 5:7 ���� */
+1227: /* ҹ�������ʾ/����ť */
+1248: /* ��ɫͼ����ʽ */
+1270: /* ��Ч���԰�ť��ʽ */
+1464: /* ��������������ʽ */
