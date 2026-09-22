@@ -1,1 +1,0 @@
-const fs = require('fs'); let lines = fs.readFileSync('frontend/src/components/AvalonGameView.vue', 'utf8').split('\n'); lines[363] = '        uni.showToast({ title: \该任务最多需要 \ 人\, icon: \'none\' });'; fs.writeFileSync('frontend/src/components/AvalonGameView.vue', lines.join('\n'));
