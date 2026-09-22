@@ -159,7 +159,7 @@ export class OnuwEngine extends GameEngine {
     return data;
   }
 
-  handleAction(sessionId, actionData, io) {
+  handlePlayerAction(sessionId, actionData, io) {
     const player = this.room.players.get(sessionId);
     if (!player || player.hasActed) return { success: false, error: '无效操作或已行动过' };
 

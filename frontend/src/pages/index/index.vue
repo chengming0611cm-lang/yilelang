@@ -834,9 +834,14 @@ const joinRoom = (isAuto = false) => {
     gameResult.value = { winner: data.winner, summary: data.reason, exiledPlayers: [], finalRoles: data.finalRoles || [], timeline: [] };
   });
 
+  
+  socket.on('your_role', (data) => {
+    myInitialRole.value = data.role;
+  });
+
   socket.on('game_started', (data) => {
     appState.value = 'NIGHT';
-    myInitialRole.value = data.initialRole;
+    
     isMyTurn.value = false;
 
     playSound('night');

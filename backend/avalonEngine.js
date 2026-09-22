@@ -110,7 +110,7 @@ export class AvalonEngine extends GameEngine {
     }
   }
 
-  handleAction(sessionId, actionData, io) {
+  handlePlayerAction(sessionId, actionData, io) {
     const player = this.room.players.get(sessionId);
     if (!player) return { success: false, error: '玩家不存在' };
 
