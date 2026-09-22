@@ -232,19 +232,30 @@
         <text class="night-info">当前行动: {{ ROLE_NAMES[currentNightRole] || '...' }}</text>
       </view>
 
-      <view v-if="nightPanelOpen" class="night-content-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-        <view class="flex items-center justify-center mt" style="display: flex; flex-direction: row; align-items: center; justify-content: center; width: 100%; margin-top: 40rpx;">
-        <view class="role-card-3d" style="margin: 0; box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.5);">
-          <view class="role-sprite-large onuw-sprite" :style="{'background-position': ROLES_DICTIONARY[myInitialRole]?.spritePosition}"></view>
+      
+      <view class="flip-container mt">
+        <view class="flipper" :class="{ 'is-flipped': nightPanelOpen }">
+          <!-- 卡牌背面 (默认状态) -->
+          <view class="front card-back-design" @click.stop="nightPanelOpen = true">
+            <view class="card-back-inner"></view>
+          </view>
+          
+          <!-- 卡牌正面 -->
+          <view class="back role-card-3d">
+            <view class="role-sprite-large onuw-sprite" :style="{'background-position': ROLES_DICTIONARY[myInitialRole]?.spritePosition}"></view>
+          </view>
         </view>
-        <view style="display: flex; flex-direction: column; align-items: flex-start; margin-left: 40rpx;">
-          <text class="card-name" style="color: #2c3e50; font-size: 56rpx; font-weight: bold; margin-bottom: 10rpx;">{{ ROLE_NAMES[myInitialRole] }}</text>
-          <text style="color: #666; font-size: 32rpx; margin-bottom: 10rpx; font-weight: bold;">[ {{ mySeatNumber }}号 ] {{ players.find(p => p.sessionId === sessionId)?.nickname || '' }}</text>
+
+        <!-- 右侧信息（只在正面朝上时显示） -->
+        <view v-if="nightPanelOpen" class="role-info-side">
+          <text class="card-name">{{ ROLE_NAMES[myInitialRole] }}</text>
+          <text class="player-info">[ {{ mySeatNumber }}号 ] {{ players.find(p => p.sessionId === sessionId)?.nickname || '' }}</text>
           <text class="card-label" style="font-size: 28rpx; color: #888; margin-bottom: 30rpx;">您的初始底牌</text>
-          <button class="hide-panel-btn" size="mini" @click.stop="nightPanelOpen = false" style="margin: 0;">🙈 收起（防窥）</button>
+          <button class="hide-panel-btn" size="mini" @click.stop="nightPanelOpen = false">🙈 收起（防窥）</button>
         </view>
       </view>
 
+      <view v-if="nightPanelOpen" class="night-content-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center; margin-top: 40rpx;">
         <!-- 属于我的回合 -->
         <view v-if="isMyTurn" class="action-panel active-turn">
           <text class="action-title">请执行行动</text>
@@ -252,7 +263,7 @@
           <!-- 狼人 -->
           <view v-if="myInitialRole === 'werewolf'">
             <view v-if="nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0">
-              <text>你的狼队友是：</text>
+              <text>你的狼队友是:</text>
               <text v-for="w in nightViewData.werewolfMates" :key="w" style="font-weight: bold; margin-left: 10rpx;">[ {{ w }}号 ]</text>
             </view>
             <view v-else>
@@ -267,69 +278,95 @@
 
           <!-- 预言家 -->
           <view v-else-if="myInitialRole === 'seer'">
-            <text>你可以验一名玩家的牌，或看两张中央的牌:</text>
-            <view style="margin: 20rpx 0;">
-              <picker @change="onSeerPlayerChange" :range="otherPlayers" range-key="displayName">
-                <button size="mini" type="primary">验玩家牌</button>
-              </picker>
+            <view v-if="nightViewData.seenRole">
+              <text>你看到的牌是: <text style="color: #e74c3c; font-weight: bold;">{{ ROLE_NAMES[nightViewData.seenRole] }}</text></text>
             </view>
-            <view class="center-cards mt">
-              <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 1] })">看左+中</button>
-              <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [1, 2] })">看中+右</button>
-              <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 2] })">看左+右</button>
+            <view v-else-if="nightViewData.seenRoles">
+              <text>你看到的中央牌是:</text>
+              <text style="color: #e74c3c; font-weight: bold; display: block; margin-top: 10rpx;">{{ ROLE_NAMES[nightViewData.seenRoles[0]] }} & {{ ROLE_NAMES[nightViewData.seenRoles[1]] }}</text>
+            </view>
+            <view v-else>
+              <text>查看一名其他玩家:</text>
+              <picker class="picker-box mt" mode="selector" :range="otherPlayers" range-key="nickname" @change="onSeerPlayerChange">
+                <view>请选择玩家</view>
+              </picker>
+              <text style="margin: 20rpx 0; display: block;">或者</text>
+              <view class="center-cards mt">
+                <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 1] })">看左+中</button>
+                <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [1, 2] })">看中+右</button>
+                <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 2] })">看左+右</button>
+              </view>
             </view>
           </view>
 
           <!-- 强盗 -->
           <view v-else-if="myInitialRole === 'robber'">
-            <text>选择一名玩家交换底牌（并查看新底牌）：</text>
-            <picker @change="onRobPlayerChange" :range="otherPlayers" range-key="displayName">
-              <button class="mt" size="mini" type="primary">选择玩家并抢夺</button>
-            </picker>
+            <view v-if="nightViewData.robbedRole">
+              <text>你抢到了: <text style="color: #e74c3c; font-weight: bold;">{{ ROLE_NAMES[nightViewData.robbedRole] }}</text></text>
+            </view>
+            <view v-else>
+              <text>选择一名玩家进行抢夺:</text>
+              <picker class="picker-box mt" mode="selector" :range="otherPlayers" range-key="nickname" @change="onRobPlayerChange">
+                <view>请选择玩家</view>
+              </picker>
+            </view>
           </view>
 
           <!-- 捣蛋鬼 -->
           <view v-else-if="myInitialRole === 'troublemaker'">
-            <text>你可以选择交换两名其他玩家的底牌：</text>
-            <picker @change="onTroublemakerP1Change" :range="otherPlayers" range-key="displayName">
-              <button class="mt" size="mini">玩家1: {{ tmP1 ? tmP1.nickname : '选择' }}</button>
-            </picker>
-            <picker @change="onTroublemakerP2Change" :range="otherPlayers" range-key="displayName">
-              <button class="mt" size="mini">玩家2: {{ tmP2 ? tmP2.nickname : '选择' }}</button>
-            </picker>
-            <button class="mt" size="mini" type="primary" @click.stop="doTroublemaker" :disabled="!tmP1 || !tmP2">确认交换</button>
+            <view v-if="nightViewData.swapped">
+              <text>交换成功！</text>
+            </view>
+            <view v-else>
+              <text>选择两名玩家交换身份:</text>
+              <picker class="picker-box mt" mode="selector" :range="otherPlayers" range-key="nickname" @change="(e) => tmP1 = otherPlayers[e.detail.value]">
+                <view>玩家1: {{ tmP1 ? tmP1.nickname : '未选择' }}</view>
+              </picker>
+              <picker class="picker-box mt" mode="selector" :range="otherPlayers" range-key="nickname" @change="(e) => tmP2 = otherPlayers[e.detail.value]">
+                <view>玩家2: {{ tmP2 ? tmP2.nickname : '未选择' }}</view>
+              </picker>
+              <button class="btn mt" type="primary" size="mini" @click="doTroublemaker">确认交换</button>
+            </view>
           </view>
 
           <!-- 酒鬼 -->
           <view v-else-if="myInitialRole === 'drunk'">
-            <text>盲换中央的牌:</text>
-            <view class="center-cards mt">
-              <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 0 })">换左侧</button>
-              <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 1 })">换中间</button>
-              <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 2 })">换右侧</button>
+            <view v-if="nightViewData.swapped">
+              <text>已盲换！</text>
             </view>
+            <view v-else>
+              <text>盲换中央的牌:</text>
+              <view class="center-cards mt">
+                <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 0 })">换左侧</button>
+                <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 1 })">换中间</button>
+                <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 2 })">换右侧</button>
+              </view>
+            </view>
+          </view>
+
+          <!-- 爪牙 -->
+          <view v-else-if="myInitialRole === 'minion'">
+            <text v-if="nightViewData.werewolves && nightViewData.werewolves.length > 0">
+              狼人是: 
+              <text v-for="w in nightViewData.werewolves" :key="w" style="font-weight: bold; margin-left: 10rpx;">[ {{ w }}号 ]</text>
+            </text>
+            <text v-else>场上没有狼人！</text>
+          </view>
+          
+          <!-- 守夜人 -->
+          <view v-else-if="myInitialRole === 'mason'">
+            <text v-if="nightViewData.masonMates && nightViewData.masonMates.length > 0">
+              另一个守夜人是: 
+              <text v-for="m in nightViewData.masonMates" :key="m" style="font-weight: bold; margin-left: 10rpx;">[ {{ m }}号 ]</text>
+            </text>
+            <text v-else>你是唯一的守夜人！</text>
           </view>
 
           <!-- 失眠者 -->
           <view v-else-if="myInitialRole === 'insomniac'">
-            <text>经过一晚，你的当前底牌变成了：</text>
-            <text style="font-size: 36rpx; color: #e74c3c; display: block; margin-top: 10rpx; font-weight: bold;">
-              {{ ROLE_NAMES[nightViewData.currentRole] }}
+            <text v-if="nightViewData.currentRole">
+              你现在的牌是: <text style="color: #e74c3c; font-weight: bold;">{{ ROLE_NAMES[nightViewData.currentRole] }}</text>
             </text>
-          </view>
-          
-          <!-- 爪牙 -->
-          <view v-else-if="myInitialRole === 'minion'">
-            <text>场上的狼人是:</text>
-            <text v-for="w in nightViewData.werewolves" :key="w" style="font-weight: bold; margin-left: 10rpx;">[ {{ w }}号 ]</text>
-            <text v-if="!nightViewData.werewolves || nightViewData.werewolves.length === 0">场上没有狼人</text>
-          </view>
-
-          <!-- 守夜人 -->
-          <view v-else-if="myInitialRole === 'mason'">
-            <text>你的守夜人队友是:</text>
-            <text v-for="m in nightViewData.masonMates" :key="m" style="font-weight: bold; margin-left: 10rpx;">[ {{ m }}号 ]</text>
-            <text v-if="!nightViewData.masonMates || nightViewData.masonMates.length === 0">你是唯一的守夜人</text>
           </view>
 
           <view style="margin-top: 40rpx;" v-if="['werewolf', 'minion', 'mason', 'insomniac'].includes(myInitialRole) || (myInitialRole==='werewolf' && nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0)">
@@ -340,16 +377,11 @@
           </view>
         </view>
         
-        <!-- 盲操作等待回合 -->
         <view v-else class="action-panel blind-turn">
           <text class="action-title">请等待其他人行动...</text>
         </view>
       </view>
 
-      <view v-else class="night-mask">
-        <button class="show-panel-btn" @click.stop="nightPanelOpen = true">👀 点击查看您的底牌与操作面板</button>
-        <text class="mask-sub">未到您的回合时，请随意滑动屏幕进行伪装操作，防止暴露身份</text>
-      </view>
     </view>
 
     <!-- ==================== DAY (白天讨论) ==================== -->
@@ -1501,4 +1533,87 @@ const submitVote = (targetseatNumber) => {
   50% { transform: scale(1); opacity: 1; }
   100% { transform: scale(0.95); opacity: 0.9; }
 }
+
+.flip-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+  width: 100%;
+  margin-top: 20rpx;
+  min-height: 450rpx;
+}
+.flipper {
+  width: 320rpx;
+  height: 448rpx;
+  position: relative;
+  transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transform-style: preserve-3d;
+  margin: 0;
+}
+.flipper.is-flipped {
+  transform: rotateY(180deg);
+}
+.front, .back {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  backface-visibility: hidden;
+  border-radius: 20rpx;
+  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.5);
+}
+.front {
+  z-index: 2;
+  transform: rotateY(0deg);
+  cursor: pointer;
+}
+.back {
+  transform: rotateY(180deg);
+}
+.card-back-design {
+  background: radial-gradient(circle at center, #2c3e50 0%, #1a252f 100%);
+  border: 12rpx solid #34495e;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 20rpx rgba(0,0,0,0.8), 0 10rpx 30rpx rgba(0,0,0,0.5);
+}
+.card-back-inner {
+  width: 70%;
+  height: 70%;
+  border: 4rpx solid #5d6d7e;
+  border-radius: 12rpx;
+  background: repeating-linear-gradient(
+    45deg,
+    #2c3e50,
+    #2c3e50 10px,
+    #34495e 10px,
+    #34495e 20px
+  );
+  opacity: 0.8;
+  animation: pulse 3s infinite ease-in-out;
+}
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.6; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.6; }
+}
+.role-info-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 40rpx;
+  animation: fadeIn 0.6s ease forwards;
+}
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateX(-20rpx); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.card-name { color: #2c3e50; font-size: 56rpx; font-weight: bold; margin-bottom: 10rpx; }
+.player-info { color: #666; font-size: 32rpx; margin-bottom: 30rpx; font-weight: bold; }
+
 </style>
