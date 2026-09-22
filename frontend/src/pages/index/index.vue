@@ -835,10 +835,6 @@ const joinRoom = (isAuto = false) => {
   });
 
   
-  socket.on('your_role', (data) => {
-    myInitialRole.value = data.role;
-  });
-
   socket.on('game_started', (data) => {
     appState.value = 'NIGHT';
     
