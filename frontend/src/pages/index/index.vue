@@ -333,7 +333,7 @@
           </view>
 
           <view style="margin-top: 40rpx;" v-if="['werewolf', 'minion', 'mason', 'insomniac'].includes(myInitialRole) || (myInitialRole==='werewolf' && nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0)">
-             <button class="btn" type="default" @click.stop="submitNightAction({ type: 'NONE' })">确认完毕</button>
+             <button class="btn" type="default" @click.stop="submitNightAction({ type: 'CONFIRM' })">确认完毕</button>
           </view>
           <view style="margin-top: 20rpx;" v-else>
              <button class="btn" type="default" @click.stop="submitNightAction({ type: 'NONE' })">放弃行动</button>
