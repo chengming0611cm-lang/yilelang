@@ -49,7 +49,7 @@ export class OnuwEngine extends GameEngine {
     };
   }
 
-  start(io) {
+  startGame(io) {
     const roles = shuffleArray([...this.room.settings.selectedRoles]);
     const allPlayers = Array.from(this.room.players.values());
 

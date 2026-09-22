@@ -46,7 +46,7 @@ export class AvalonEngine extends GameEngine {
     };
   }
 
-  start(io) {
+  startGame(io) {
     const playerCount = this.room.players.size;
     let effectiveCount = playerCount < 5 ? 5 : playerCount;
     if (playerCount > 10) throw new Error('最多支持 10 人游戏');
