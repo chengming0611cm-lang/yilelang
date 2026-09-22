@@ -842,6 +842,7 @@ const joinRoom = (isAuto = false) => {
   socket.on('game_started', (data) => {
     appState.value = 'NIGHT';
     myInitialRole.value = data.initialRole;
+    nightPanelOpen.value = false;
     
     isMyTurn.value = false;
 
