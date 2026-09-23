@@ -3,14 +3,16 @@
     {
       "path": "pages/index/index",
       "style": {
-        "navigationBarTitleText": "大厅"
+        "navigationBarTitleText": "桌游聚会",
+        "navigationStyle": "custom"
       }
     }
   ],
   "globalStyle": {
-    "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "一夜终极狼人",
-    "navigationBarBackgroundColor": "#F8F8F8",
-    "backgroundColor": "#F8F8F8"
+    "navigationStyle": "custom",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "桌游聚会辅助终端",
+    "navigationBarBackgroundColor": "#090d16",
+    "backgroundColor": "#090d16"
   }
 }

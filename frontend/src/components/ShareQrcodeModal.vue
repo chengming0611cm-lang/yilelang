@@ -1,8 +1,8 @@
-﻿<template>
+<template>
   <view class="modal-mask" @click="close">
     <view class="modal-content" @click.stop="">
       <!-- 关闭按钮 -->
-      <view class="close-btn" @click="close">X</view>
+      <view class="close-btn" @click="close">✕</view>
 
       <!-- 游戏名称 -->
       <view class="game-name-wrapper">
@@ -10,14 +10,17 @@
       </view>
 
       <!-- 巨大的房间号 -->
-      <view class="room-code-section">
-        <text class="room-code-title">邀请您加入房间</text>
-        <text class="room-code-number">{{ roomId }}</text>
+      <view class="room-code-section" @click="copyRoomCode">
+        <text class="room-code-title">邀请加入房间（点击复制）</text>
+        <view class="room-code-badge">
+          <text class="room-code-number">{{ roomId }}</text>
+          <text class="copy-tag">📋 复制</text>
+        </view>
       </view>
 
       <!-- 扫码加入 -->
       <view class="qrcode-section">
-        <text class="qrcode-tip">面对面聚会，请使用微信扫码加入房间</text>
+        <text class="qrcode-tip">手机扫码快速对局</text>
         <view class="qrcode-container">
           <image v-if="qrcodeUrl" :src="qrcodeUrl" class="qrcode-img" mode="aspectFit"></image>
         </view>
@@ -26,7 +29,7 @@
       <!-- 底部操作区 -->
       <view class="action-section">
         <button class="copy-btn" @click="copyLink">
-          <text class="copy-icon">🔗</text> 一键复制加入链接
+          <text class="copy-icon">🔗</text> 复制网页邀请链接
         </button>
       </view>
     </view>
@@ -57,12 +60,12 @@ onMounted(async () => {
     const baseUrl = window.location.origin + window.location.pathname;
     const fullUrl = `${baseUrl}?roomId=${props.roomId}`;
     
-    // 生成暗色的二维码
+    // 生成清晰的二维码
     qrcodeUrl.value = await QRCode.toDataURL(fullUrl, {
       width: 256,
       margin: 1,
       color: {
-        dark: '#1e3a8a',  
+        dark: '#0f172a',  
         light: '#ffffff'
       }
     });
@@ -73,6 +76,18 @@ onMounted(async () => {
 
 const close = () => {
   emit('close');
+};
+
+const copyRoomCode = () => {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(props.roomId).then(() => {
+      uni.showToast({ title: `房间号 ${props.roomId} 已复制`, icon: 'success' });
+    }).catch(() => {
+      uni.setClipboardData({ data: props.roomId });
+    });
+  } else {
+    uni.setClipboardData({ data: props.roomId });
+  }
 };
 
 const copyLink = () => {
@@ -86,7 +101,6 @@ const copyLink = () => {
       uni.showToast({ title: '复制失败，请重试', icon: 'none' });
     });
   } else {
-    // 兼容性降级
     uni.setClipboardData({
       data: fullUrl,
       success: () => {
@@ -104,59 +118,66 @@ const copyLink = () => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  height: 100dvh;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  padding: 40rpx;
+  padding: 30rpx;
   box-sizing: border-box;
 }
 
 .modal-content {
   position: relative;
   width: 100%;
-  max-width: 600rpx;
-  background: rgba(30, 41, 59, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 48rpx;
-  box-shadow: 0 40rpx 100rpx -10rpx rgba(0, 0, 0, 0.6), inset 0 2rpx 0 rgba(255, 255, 255, 0.1);
-  padding: 60rpx 40rpx;
+  max-width: 580rpx;
+  max-height: 88vh;
+  max-height: 88dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: rgba(18, 24, 38, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 40rpx;
+  box-shadow: 0 40rpx 80rpx -10rpx rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  padding: 48rpx 36rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .close-btn {
   position: absolute;
-  top: 30rpx;
-  right: 30rpx;
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 32rpx;
-  background: rgba(255, 255, 255, 0.1);
+  top: 24rpx;
+  right: 24rpx;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #94a3b8;
-  font-size: 32rpx;
-  transition: background 0.2s;
+  font-size: 28rpx;
+  transition: all 0.2s ease;
 }
 
 .close-btn:active {
   background: rgba(255, 255, 255, 0.2);
+  transform: scale(0.92);
 }
 
 .game-name-wrapper {
-  margin-bottom: 20rpx;
+  margin-bottom: 16rpx;
 }
 
 .game-name-text {
-  font-size: 36rpx;
+  font-size: 32rpx;
   font-weight: 800;
   background-image: linear-gradient(135deg, #60a5fa, #c084fc);
   -webkit-background-clip: text;
@@ -169,25 +190,41 @@ const copyLink = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 40rpx;
+  margin-bottom: 30rpx;
   width: 100%;
+  cursor: pointer;
 }
 
 .room-code-title {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #94a3b8;
-  margin-bottom: 10rpx;
-  text-transform: uppercase;
-  letter-spacing: 4rpx;
+  margin-bottom: 8rpx;
+  letter-spacing: 2rpx;
+}
+
+.room-code-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 16rpx;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8rpx 28rpx;
+  border-radius: 20rpx;
+  border: 1px dashed rgba(96, 165, 250, 0.4);
 }
 
 .room-code-number {
-  font-size: 96rpx;
+  font-size: 72rpx;
   font-weight: 900;
   color: #f8fafc;
-  letter-spacing: 16rpx;
-  text-shadow: 0 0 40rpx rgba(96, 165, 250, 0.5);
-  line-height: 1;
+  letter-spacing: 12rpx;
+  text-shadow: 0 0 30rpx rgba(96, 165, 250, 0.6);
+  line-height: 1.1;
+}
+
+.copy-tag {
+  font-size: 22rpx;
+  color: #60a5fa;
+  font-weight: 600;
 }
 
 .qrcode-section {
@@ -198,28 +235,28 @@ const copyLink = () => {
 }
 
 .qrcode-tip {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #cbd5e1;
-  margin-bottom: 20rpx;
+  margin-bottom: 16rpx;
   text-align: center;
 }
 
 .qrcode-container {
   background: #ffffff;
-  padding: 24rpx;
-  border-radius: 32rpx;
-  box-shadow: 0 20rpx 40rpx rgba(0, 0, 0, 0.3);
-  margin-bottom: 40rpx;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 16rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 16rpx 36rpx rgba(0, 0, 0, 0.4);
+  margin-bottom: 32rpx;
+  transition: transform 0.2s ease;
 }
 
 .qrcode-container:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
 
 .qrcode-img {
-  width: 300rpx;
-  height: 300rpx;
+  width: 250rpx;
+  height: 250rpx;
   display: block;
 }
 
@@ -229,16 +266,28 @@ const copyLink = () => {
 
 .copy-btn {
   width: 100%;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
   color: #ffffff;
   border: none;
-  border-radius: 999rpx;
-  padding: 24rpx 0;
-  font-size: 32rpx;
-  font-weight: bold;
+  border-radius: 20rpx;
+  padding: 22rpx 0;
+  font-size: 30rpx;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10rpx 30rpx rgba(139, 92, 246, 0.4);
+  gap: 12rpx;
+  box-shadow: 0 10rpx 25rpx rgba(37, 99, 235, 0.4);
+  transition: all 0.2s ease;
+}
+
+.copy-btn::after { border: none; }
+.copy-btn:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.copy-icon {
+  font-size: 30rpx;
 }
 </style>

@@ -6,3 +6,5 @@ frontend/dist/
 pinggy_url.txt
 
 cloudflared.exe
+*qrcode*.png
+qrcode.html

@@ -3,74 +3,95 @@
     <!-- 全局断网重连遮罩 -->
     <view v-if="isDisconnected" class="disconnect-mask">
       <view class="disconnect-panel">
-        <text style="font-size: 80rpx;">⚠️</text>
-        <text style="font-size: 36rpx; font-weight: bold; margin-top: 20rpx;">网络断开，正在尝试重连...</text>
+        <text class="disconnect-icon">⚠️</text>
+        <text class="disconnect-title">网络连接已断开</text>
+        <text class="disconnect-sub">正在尝试自动重连服务器...</text>
       </view>
     </view>
 
-    <!-- 顶部状态栏：显示自己的玩家座号 -->
-    <view class="w-full flex justify-center mt-4" v-if="appState === 'PLAYING' || appState === 'NIGHT' || appState === 'DAY' || appState === 'VOTING'">
-      <view class="bg-blue-600/30 border border-blue-500/50 rounded-full px-6 py-2 shadow-[0_0_15px_rgba(37,99,235,0.3)] backdrop-blur-sm">
-        <text class="text-white text-sm font-bold tracking-wide">🎯 你是 {{ mySeatNumber }} 号玩家</text>
-      </view>
-    </view>
-    
-    <view class="header" v-if="appState !== 'LOBBY'">
-      <!-- 房间内状态：左右结构 -->
-      <view class="header-inner">
-        <!-- 左侧/居中：唤醒房间号分享 -->
-        <view class="room-pill-btn pulse-animation" @click="showShareModal = true">
-          <text class="room-pill-text">房间号: {{ roomId }} (点击邀请)</text>
-        </view>
-
-        <!-- 右侧：控制与退出 -->
-        <view class="header-actions">
-          <text v-if="appState !== 'WAITING' && isHost" class="header-btn danger-text" @click="forceReturnLobby">强制重开</text>
-          <text class="header-btn ghost-btn" @click="leaveRoom">退出房间</text>
+    <!-- 顶部状态栏与操作栏（一体化游戏顶栏：酒馆房间铭牌 + 功能区） -->
+    <view class="app-topbar" v-if="appState !== 'LOBBY'">
+      <view class="topbar-left">
+        <!-- 退出房间 -->
+        <view class="topbar-btn action-pill ghost-pill" @click="leaveRoom">
+          <text class="pill-text">退出</text>
         </view>
       </view>
+
+      <view class="topbar-center">
+        <!-- 酒馆房间金饰铭牌：点击可直接打开分享/复制弹窗 -->
+        <view class="tavern-room-crest" @click="showShareModal = true">
+          <view class="crest-frame">
+            <text class="crest-label">房间</text>
+            <text class="crest-id">{{ roomId }}</text>
+            <view class="crest-invite-chip">
+              <text class="invite-icon">📲</text>
+              <text class="invite-title">邀请</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 游戏阶段座位标 -->
+        <view v-if="['PLAYING', 'NIGHT', 'DAY', 'VOTING'].includes(appState)" class="seat-badge-chip">
+          <text class="seat-badge-text">🎯 {{ mySeatNumber }}号</text>
+        </view>
+      </view>
+
+      <view class="topbar-right">
+        <!-- 音效测试 -->
+        <view
+          v-if="['WAITING', 'NIGHT', 'DAY', 'VOTING'].includes(appState)"
+          class="topbar-btn icon-btn"
+          @click="testAudio"
+          title="音效测试">
+          <text class="btn-emoji">🔊</text>
+        </view>
+
+        <!-- 角色图鉴 -->
+        <view
+          v-if="['WAITING', 'NIGHT', 'DAY', 'VOTING'].includes(appState)"
+          class="topbar-btn icon-btn"
+          @click="showRoleGuide = true"
+          title="角色图鉴">
+          <text class="btn-emoji">📖</text>
+        </view>
+
+        <!-- 房主强制重开 -->
+        <view
+          v-if="appState !== 'WAITING' && isHost"
+          class="topbar-btn action-pill danger-pill"
+          @click="forceReturnLobby">
+          <text class="pill-text">重开</text>
+        </view>
+      </view>
     </view>
 
-    <!-- 角色图鉴悬浮按钮 -->
-    <view
-      v-if="appState === 'NIGHT' || appState === 'DAY' || appState === 'VOTING'"
-      class="guide-float-btn"
-      @click="showRoleGuide = true">
-      <text class="guide-icon">📖</text>
-    </view>
-
-    <!-- 音效测试按钮（WAITING/NIGHT/DAY/VOTING 状态显示） -->
-    <view
-      v-if="appState === 'WAITING' || appState === 'NIGHT' || appState === 'DAY' || appState === 'VOTING'"
-      class="audio-test-btn"
-      @click="testAudio">
-      <text class="audio-icon">🔊</text>
-    </view>
-
-    <!-- 角色图鉴弹窗 -->
+    <!-- 角色图鉴弹窗 (抽屉式暗黑面板) -->
     <view v-if="showRoleGuide" class="guide-modal" @click="showRoleGuide = false">
       <view class="guide-panel" @click.stop="">
         <view class="guide-header">
           <text class="guide-title">📖 角色图鉴</text>
-          <text class="guide-close" @click="showRoleGuide = false">✕</text>
+          <view class="guide-close" @click="showRoleGuide = false">✕</view>
         </view>
 
         <!-- 我的角色（固定在顶部，不参与滚动） -->
-        <view style="padding: 24rpx 24rpx 0 24rpx; flex-shrink: 0; box-sizing: border-box; width: 100%;">
-          <view v-if="activeMyRole && activeDictionary[activeMyRole]" class="role-card my-role">
+        <view class="my-role-container" v-if="activeMyRole && activeDictionary[activeMyRole]">
+          <view class="role-card my-role">
             <view class="role-header">
               <view :class="['role-sprite', gameType === 'avalon' ? 'avalon-sprite' : 'onuw-sprite']" :style="{'background-position': activeDictionary[activeMyRole].spritePosition}"></view>
               <view class="role-info">
-                <text class="role-name">{{ activeDictionary[activeMyRole].name }}</text>
+                <view class="role-name-row">
+                  <text class="role-name">{{ activeDictionary[activeMyRole].name }}</text>
+                  <text class="my-role-badge">你的身份</text>
+                </view>
                 <text class="role-camp" :style="{color: CAMP_COLORS[activeDictionary[activeMyRole].camp]}">
                   {{ activeDictionary[activeMyRole].camp }}
                 </text>
               </view>
-              <view class="my-role-badge">你的身份</view>
             </view>
             <text class="role-desc">{{ activeDictionary[activeMyRole].description }}</text>
-            <view class="role-tip">
-              <text class="tip-label">💡 高阶提示</text>
+            <view class="role-tip" v-if="activeDictionary[activeMyRole].advancedTip">
+              <text class="tip-label">💡 高阶战术提示</text>
               <text class="tip-content">{{ activeDictionary[activeMyRole].advancedTip }}</text>
             </view>
           </view>
@@ -79,7 +100,7 @@
         <scroll-view scroll-y class="guide-content">
           <!-- 本局所有角色 -->
           <view class="roles-section">
-            <text class="section-title">本局所有角色 (共 {{ selectedRoles.length }} 张)</text>
+            <text class="section-title">本局配置角色 (共 {{ selectedRoles.length }} 张)</text>
             <view
               v-for="(roleId, index) in selectedRoles"
               :key="index"
@@ -111,328 +132,589 @@
     />
 
     <!-- ==================== WAITING (准备阶段) ==================== -->
-    <view v-else-if="appState === 'WAITING'" class="section">
-      <text class="room-title">房间号: {{ roomId }}</text>
-      
-      <view class="player-list">
-        <text class="sub-title">玩家列表 ({{ players.length }}/10)</text>
-        <view class="player-item" :class="{ 'offline-player': p.offline }" v-for="p in sortedPlayers" :key="p.sessionId" style="display: flex; align-items: center; justify-content: flex-start;">
-          <text class="font-bold text-slate-700" style="font-size: 32rpx; margin-right: 16rpx;">[{{ p.seatNumber }}号] {{ p.nickname }}</text> 
-          <text v-if="p.isHost" class="host-tag">(房主)</text>
-          <text v-else-if="p.isReady" style="color: #27ae60; font-size: 24rpx; margin-left: 10rpx; font-weight: bold;">(已准备)</text>
-          <text v-else style="color: #7f8c8d; font-size: 24rpx; margin-left: 10rpx;">(未准备)</text>
-          <text v-if="p.offline" style="color: #e74c3c; font-size: 24rpx; margin-left: 10rpx; font-weight: bold;">(离线)</text>
-        </view>
-      </view>
+    <view v-else-if="appState === 'WAITING'" class="waiting-wrapper">
 
-      <view class="settings" v-if="isHost">
-        <view class="game-selector mt" style="margin-bottom: 30rpx;">
-          <text class="sub-title">当前游戏模式</text>
-          <radio-group @change="onGameTypeChange" style="display: flex; gap: 20rpx; margin-top: 10rpx;">
-            <label><radio value="onuw" :checked="gameType === 'onuw'" /> 一夜终极狼人</label>
-            <label><radio value="avalon" :checked="gameType === 'avalon'" /> 阿瓦隆</label>
-            <label><radio value="sgs" :checked="gameType === 'sgs'" /> 三国杀</label>
-          </radio-group>
+      <!-- 桌游聚会席位台板块 -->
+      <view class="game-plate table-seating-section">
+        <view class="plate-header">
+          <view class="plate-title-group">
+            <text class="plate-icon">⚔️</text>
+            <text class="plate-title">席位围桌</text>
+            <view class="player-count-pill">
+              <text class="count-num">{{ players.length }}</text>
+              <text class="count-max">/10</text>
+            </view>
+          </view>
+          <text class="plate-status-tip">{{ isHost ? '全员就绪后房主开局' : (myReadyStatus ? '已就绪 · 等待房主开局' : '请点击下方「立即就绪」') }}</text>
         </view>
 
-        <!-- 一夜狼配置 -->
-        <view v-if="gameType === 'onuw' || gameType === 'sgs'">
-          <text class="sub-title">设置板子 (当前已有 {{ players.length }} 人，实际需 {{ gameType === 'sgs' ? players.length : players.length + 3 }} 张牌)</text>
-          <text style="font-size: 28rpx; color: #e74c3c; font-weight: bold;">当前已选: {{ selectedRoles.length }} 张</text>
-          
-          <view class="recommend-box mt">
-            <text class="sub-title" style="margin-bottom: 10rpx;">智能板子推荐:</text>
-            <view style="display: flex; flex-wrap: wrap; gap: 10rpx;">
-              <button class="action-btn" hover-class="action-btn-hover" size="mini" type="default" v-for="n in 8" :key="n" @click="applyRecommend(n+2)">{{ n+2 }} 人局</button>
+        <!-- 席位卡牌网格 (自适应桌游席位台) -->
+        <view class="table-seats-grid">
+          <view 
+            v-for="p in sortedPlayers" 
+            :key="p.sessionId"
+            class="seat-podium" 
+            :class="{ 
+              'is-me': p.sessionId === sessionId, 
+              'is-offline': p.offline,
+              'is-ready': p.isReady && !p.isHost,
+              'is-host': p.isHost
+            }"
+          >
+            <!-- 房主三维金冠 -->
+            <view v-if="p.isHost" class="host-floating-crown">👑</view>
+            
+            <!-- 头像框底座与发光光环 -->
+            <view class="podium-avatar-wrapper">
+              <view class="avatar-aura-ring"></view>
+              <view class="podium-avatar">
+                <text class="avatar-char">{{ p.nickname.charAt(0).toUpperCase() }}</text>
+              </view>
+              <view class="seat-index-badge">{{ p.seatNumber }}</view>
+            </view>
+
+            <!-- 玩家名字与自我标签 -->
+            <view class="podium-name-tag">
+              <text class="podium-nickname">{{ p.nickname }}</text>
+              <text v-if="p.sessionId === sessionId" class="self-jewel-tag">我</text>
+            </view>
+
+            <!-- 就绪状态胶囊 -->
+            <view class="podium-status">
+              <text v-if="p.isHost" class="badge-host">房主</text>
+              <text v-else-if="p.isReady" class="badge-ready">已就绪</text>
+              <text v-else-if="p.offline" class="badge-offline">离线</text>
+              <text v-else class="badge-waiting">未就绪</text>
             </view>
           </view>
 
-          <view class="roles-grid mt">
-            <!-- 这里使用过滤后的 ONUW_ROLE_NAMES 避免混入阿瓦隆角色 -->
-            <view class="role-counter-item" v-for="(name, roleId) in (gameType === 'sgs' ? SGS_ROLE_NAMES : ONUW_ROLE_NAMES)" :key="roleId">
-              <text class="role-name">{{ name }}</text>
-              <view class="stepper">
-                <text class="step-btn" @click="changeRoleCount(roleId, -1)">-</text>
-                <text class="step-val">{{ getRoleCount(roleId) }}</text>
-                <text class="step-btn" @click="changeRoleCount(roleId, 1)">+</text>
+          <!-- 空席位等待加入槽位 (智能填充保持桌面饱满) -->
+          <view 
+            v-for="idx in emptySeatsCount" 
+            :key="'empty-' + idx"
+            class="seat-podium empty-slot"
+            @click="showShareModal = true"
+          >
+            <view class="empty-podium-avatar">
+              <text class="empty-plus">+</text>
+            </view>
+            <text class="empty-slot-text">虚位以待</text>
+            <text class="empty-invite-hint">邀请好友</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 游戏设置板块 (房主控制台) -->
+      <view class="game-plate mt-3" v-if="isHost">
+        <view class="plate-header">
+          <view class="plate-title-group">
+            <text class="plate-icon">🎮</text>
+            <text class="plate-title">对战模式</text>
+          </view>
+          <text class="plate-status-tip">房主实时切换</text>
+        </view>
+
+        <!-- 阵营艺术选择卡 (横向三格) -->
+        <view class="game-mode-deck">
+          <view 
+            class="mode-banner mode-banner-onuw" 
+            :class="{ active: gameType === 'onuw' }" 
+            @click="onGameTypeChange({ detail: { value: 'onuw' } })">
+            <view class="banner-crest">🐺</view>
+            <view class="banner-meta">
+              <text class="banner-title">一夜狼人</text>
+              <text class="banner-desc">单夜决胜</text>
+            </view>
+            <view v-if="gameType === 'onuw'" class="banner-active-check">✓</view>
+          </view>
+          
+          <view 
+            class="mode-banner mode-banner-avalon" 
+            :class="{ active: gameType === 'avalon' }" 
+            @click="onGameTypeChange({ detail: { value: 'avalon' } })">
+            <view class="banner-crest">⚔️</view>
+            <view class="banner-meta">
+              <text class="banner-title">阿瓦隆</text>
+              <text class="banner-desc">圣杯远征</text>
+            </view>
+            <view v-if="gameType === 'avalon'" class="banner-active-check">✓</view>
+          </view>
+
+          <view 
+            class="mode-banner mode-banner-sgs" 
+            :class="{ active: gameType === 'sgs' }" 
+            @click="onGameTypeChange({ detail: { value: 'sgs' } })">
+            <view class="banner-crest">🗡️</view>
+            <view class="banner-meta">
+              <text class="banner-title">三国杀</text>
+              <text class="banner-desc">身份暗战</text>
+            </view>
+            <view v-if="gameType === 'sgs'" class="banner-active-check">✓</view>
+          </view>
+        </view>
+
+        <!-- 一夜狼 / 三国杀 配置 -->
+        <view v-if="gameType === 'onuw' || gameType === 'sgs'" class="deck-config-section">
+          
+          <!-- 角色底牌平衡卡 -->
+          <view class="board-balance-card" :class="{ 'is-balanced': selectedRoles.length === (gameType === 'sgs' ? players.length : players.length + 3) }">
+            <view class="balance-left">
+              <text class="balance-title">⚖️ 角色牌库配比</text>
+              <text class="balance-subtitle">{{ gameType === 'sgs' ? '需等于玩家人数' : '需等于玩家数 + 3张底牌' }}</text>
+            </view>
+            <view class="balance-right">
+              <view class="balance-badge">
+                <text class="balance-current">{{ selectedRoles.length }}</text>
+                <text class="balance-divider">/</text>
+                <text class="balance-total">{{ gameType === 'sgs' ? players.length : players.length + 3 }}</text>
+                <text class="balance-unit">张</text>
+              </view>
+              <text class="balance-tag">{{ selectedRoles.length === (gameType === 'sgs' ? players.length : players.length + 3) ? '✓ 刚好配平' : '需调整张数' }}</text>
+            </view>
+          </view>
+
+          <!-- 快速推荐配置横滑条 -->
+          <view class="quick-preset-bar">
+            <view class="preset-label-row">
+              <text class="preset-title">⚡ 经典配板一键注入</text>
+            </view>
+            <scroll-view scroll-x class="preset-scroll" :show-scrollbar="false">
+              <view class="preset-chips-track">
+                <view 
+                  class="preset-chip" 
+                  :class="{ 'is-matching-players': players.length === (n + 2) }"
+                  v-for="n in 8" 
+                  :key="n" 
+                  @click="applyRecommend(n+2)">
+                  <text v-if="players.length === (n + 2)" class="chip-fire">🔥</text>
+                  <text class="chip-name">{{ n+2 }}人阵容</text>
+                  <text v-if="players.length === (n + 2)" class="chip-tag">推荐</text>
+                </view>
+              </view>
+            </scroll-view>
+          </view>
+
+          <!-- 角色卡牌图鉴网格 (3列精美小立绘卡牌) -->
+          <view class="card-deck-grid">
+            <view 
+              class="tarot-card"
+              :class="{ 
+                'is-active': getRoleCount(roleId) > 0,
+                'camp-wolf': activeDictionary[roleId]?.camp === '狼人阵营',
+                'camp-good': activeDictionary[roleId]?.camp === '好人阵营' || activeDictionary[roleId]?.camp === '村民阵营',
+                'camp-tanner': activeDictionary[roleId]?.camp === '独赢阵营'
+              }"
+              v-for="(name, roleId) in (gameType === 'sgs' ? SGS_ROLE_NAMES : ONUW_ROLE_NAMES)" 
+              :key="roleId"
+              @click="onCardTap(roleId)">
+              
+              <!-- 数量火漆印章角标 -->
+              <view v-if="getRoleCount(roleId) > 0" class="wax-seal-badge">
+                <text class="seal-text">×{{ getRoleCount(roleId) }}</text>
+              </view>
+
+              <!-- 卡牌画框与立绘 -->
+              <view class="card-portrait-box">
+                <view 
+                  :class="['tarot-sprite', gameType === 'sgs' ? 'sgs-sprite' : 'onuw-sprite']" 
+                  :style="{'background-position': activeDictionary[roleId]?.spritePosition || '0% 0%'}">
+                </view>
+              </view>
+
+              <!-- 卡牌铭牌 -->
+              <view class="card-caption">
+                <text class="card-name">{{ name }}</text>
+                
+                <!-- 微型步进调节器 -->
+                <view class="card-micro-stepper" @click.stop="">
+                  <view class="stepper-btn btn-minus" :class="{ disabled: getRoleCount(roleId) <= 0 }" @click="changeRoleCount(roleId, -1)">-</view>
+                  <text class="stepper-count">{{ getRoleCount(roleId) }}</text>
+                  <view class="stepper-btn btn-plus" @click="changeRoleCount(roleId, 1)">+</view>
+                </view>
               </view>
             </view>
           </view>
         </view>
 
-        <!-- 阿瓦隆配置占位 -->
-        <view v-else-if="gameType === 'avalon'">
-          <text class="sub-title">阿瓦隆板子配置</text>
-          <view style="padding: 20rpx; background: #f9f9f9; border-radius: 10rpx;">
-            <label style="display: block; margin-bottom: 10rpx;"><checkbox checked disabled /> 梅林 & 派西维尔</label>
-            <label style="display: block; margin-bottom: 10rpx;"><checkbox checked disabled /> 莫甘娜 & 刺客</label>
-            <label style="display: block; margin-bottom: 10rpx;"><checkbox disabled /> 奥伯伦</label>
-            <label style="display: block; margin-bottom: 10rpx;"><checkbox disabled /> 莫德雷德</label>
-            <text style="font-size: 24rpx; color: #888; margin-top: 10rpx; display: block;">系统将根据人数（5-10人）自动计算好人和坏人阵营的牌数及任务所需的组队人数</text>
+        <!-- 阿瓦隆配置说明 -->
+        <view v-else-if="gameType === 'avalon'" class="avalon-config-box">
+          <text class="sub-title">阿瓦隆角色分配规则</text>
+          <view class="avalon-rules-card">
+            <view class="rule-item">
+              <text class="rule-icon">🛡️</text>
+              <text class="rule-text">正义阵营：梅林、派西维尔、亚瑟忠臣</text>
+            </view>
+            <view class="rule-item">
+              <text class="rule-icon">🗡️</text>
+              <text class="rule-text">邪恶阵营：莫甘娜、刺客、奥伯伦、莫德雷德</text>
+            </view>
+            <text class="rule-hint">系统已锁定黄金规则：根据入场玩家人数（5~10人）自动在开局时均衡发放身份与各轮远征席位。</text>
           </view>
         </view>
 
-        <button class="btn mt" type="primary" @click="startGame" :disabled="!allReady">
-          {{ allReady ? '开始游戏' : '等待其他玩家准备...' }}
-        </button>
+        <!-- 房主开始游戏按钮 -->
+        <view class="epic-dock-container">
+          <button 
+            class="epic-start-btn" 
+            :class="{ 'is-clickable': allReady }"
+            :disabled="!allReady" 
+            @click="startGame">
+            <view class="btn-sheen-sweep"></view>
+            <text class="epic-icon">{{ allReady ? '⚔️' : '⏳' }}</text>
+            <text class="epic-label">{{ allReady ? '全员就绪 · 开启对局' : '等待全员准备就绪...' }}</text>
+          </button>
+        </view>
       </view>
-      
-      <view class="settings" v-else>
-        <text class="sub-title" style="font-weight: bold; color: #e67e22;">当前游戏：{{ gameType === 'onuw' ? '一夜终极狼人' : gameType === 'avalon' ? '阿瓦隆' : '三国杀' }}</text>
-        
-        <button class="btn mt" :type="myReadyStatus ? 'default' : 'primary'" @click="toggleReady">
-          {{ myReadyStatus ? '取消准备' : '准备' }}
-        </button>
+
+      <!-- 普通玩家控制台 -->
+      <view class="game-plate mt-3" v-else>
+        <view class="guest-banner">
+          <view class="guest-mode-info">
+            <text class="guest-mode-hint">当前游玩模式</text>
+            <text class="guest-mode-title">{{ gameType === 'onuw' ? '🐺 一夜终极狼人' : gameType === 'avalon' ? '⚔️ 阿瓦隆之战' : '🗡️ 三国杀身份局' }}</text>
+          </view>
+          <view class="guest-ready-status" :class="{ 'ready-done': myReadyStatus }">
+            <text class="status-indicator-dot"></text>
+            <text class="status-indicator-text">{{ myReadyStatus ? '你已准备就绪' : '等待就绪' }}</text>
+          </view>
+        </view>
+
+        <view class="epic-dock-container">
+          <button 
+            class="epic-ready-btn" 
+            :class="{ 'is-ready-active': myReadyStatus }" 
+            @click="toggleReady">
+            <view class="btn-sheen-sweep"></view>
+            <text class="epic-icon">{{ myReadyStatus ? '✕' : '🛡️' }}</text>
+            <text class="epic-label">{{ myReadyStatus ? '取消就绪' : '立即就绪' }}</text>
+          </button>
+        </view>
       </view>
     </view>
 
     <!-- ==================== GAME PHASE (游戏进行阶段) ==================== -->
     <template v-else-if="['NIGHT', 'DAY', 'VOTING', 'END', 'PLAYING'].includes(appState)">
       <!-- ==================== END (结算复盘) ==================== -->
-      <view v-if="appState === 'END'" class="section center-layout">
-        <text class="night-title" style="color: #e74c3c;">🏆 游戏结束</text>
-        <text style="font-size: 40rpx; font-weight: bold; margin: 20rpx 0;">{{ gameResult?.winner === 'good' ? '正义阵营' : (gameResult?.winner === 'evil' ? '邪恶阵营' : gameResult?.winner) }} 获胜</text>
-        <text style="color: #666; margin-bottom: 40rpx;">{{ gameResult?.summary }}</text>
+      <view v-if="appState === 'END'" class="end-section-container">
         
-        <view v-if="gameResult?.exiledPlayers?.length > 0" style="width: 100%; text-align: left; margin-bottom: 40rpx;">
-          <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">被放逐玩家:</text>
-          <text style="color: #c0392b;">{{ gameResult?.exiledPlayers.join(', ') }}</text>
+        <!-- 胜利阵营发光大横幅 -->
+        <view class="victory-banner" :class="gameResult?.winner === 'good' ? 'banner-good' : 'banner-evil'">
+          <text class="trophy-icon">🏆</text>
+          <text class="winner-title">{{ gameResult?.winner === 'good' ? '正义阵营获胜' : (gameResult?.winner === 'evil' ? '邪恶阵营获胜' : gameResult?.winner + ' 获胜') }}</text>
+          <text class="winner-summary">{{ gameResult?.summary }}</text>
         </view>
 
-        <view v-if="gameResult?.finalRoles?.length > 0" style="width: 100%; text-align: left; margin-bottom: 40rpx;">
-          <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">🎭 玩家最终底牌:</text>
-          <view v-for="p in gameResult?.finalRoles" :key="p.nickname" style="margin-bottom: 10rpx; font-size: 28rpx;">
-            <text>{{ p.nickname }} : </text>
-            <text v-if="p.initialRole !== p.currentRole" style="color: #888; text-decoration: line-through;">{{ ROLE_NAMES[p.initialRole] || p.initialRole }}</text>
-            <text v-if="p.initialRole !== p.currentRole"> ➡️ </text>
-            <text style="color: #e67e22; font-weight: bold;">{{ ROLE_NAMES[p.currentRole] || p.currentRole }}</text>
+        <!-- 放逐玩家板块 -->
+        <view v-if="gameResult?.exiledPlayers?.length > 0" class="glass-section mt-4">
+          <text class="section-heading">☠️ 被放逐玩家</text>
+          <view class="exiled-tags-row">
+            <text class="exiled-tag" v-for="(name, idx) in gameResult.exiledPlayers" :key="idx">{{ name }}</text>
           </view>
         </view>
 
-        <view v-if="gameResult?.timeline?.length > 0" style="width: 100%; text-align: left; margin-bottom: 40rpx;">
-          <text style="font-weight: bold; display: block; margin-bottom: 20rpx;">📜 全局夜间时间线复盘:</text>
-          <scroll-view scroll-y style="max-height: 400rpx; background: #f8f9f9; padding: 20rpx; border-radius: 12rpx;">
-            <view v-for="(log, idx) in gameResult?.timeline" :key="idx" style="margin-bottom: 16rpx; font-size: 26rpx; color: #34495e;">
-              {{ log }}
+        <!-- 最终底牌复盘 -->
+        <view v-if="gameResult?.finalRoles?.length > 0" class="glass-section mt-4">
+          <text class="section-heading">🎭 玩家底牌揭晓</text>
+          <view class="final-roles-grid">
+            <view class="final-role-card" v-for="p in gameResult.finalRoles" :key="p.nickname">
+              <text class="final-player-name">{{ p.nickname }}</text>
+              <view class="role-shift-row">
+                <text v-if="p.initialRole !== p.currentRole" class="old-role">{{ ROLE_NAMES[p.initialRole] || p.initialRole }}</text>
+                <text v-if="p.initialRole !== p.currentRole" class="shift-arrow">➡️</text>
+                <text class="new-role">{{ ROLE_NAMES[p.currentRole] || p.currentRole }}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 夜间时间线复盘 -->
+        <view v-if="gameResult?.timeline?.length > 0" class="glass-section mt-4">
+          <text class="section-heading">📜 夜间行动时间线</text>
+          <scroll-view scroll-y class="timeline-scroll">
+            <view v-for="(log, idx) in gameResult.timeline" :key="idx" class="timeline-item">
+              <text class="timeline-dot">•</text>
+              <text class="timeline-text">{{ log }}</text>
             </view>
           </scroll-view>
         </view>
 
-        <button v-if="isHost" class="btn mt confirm-btn" type="primary" @click="forceReturnLobby">返回大厅并开启下一局</button>
-        <button v-else class="btn mt confirm-btn" type="default" @click="appState = 'WAITING'">返回大厅准备下一局</button>
+        <!-- 返回大厅按钮 -->
+        <view class="mt-4 mb-6">
+          <button v-if="isHost" class="confirm-btn" @click="forceReturnLobby">返回大厅并开启下一局</button>
+          <button v-else class="confirm-btn secondary-btn" @click="appState = 'WAITING'">返回大厅准备下一局</button>
+        </view>
       </view>
 
       <!-- ONUW 游戏视图 -->
       <template v-else-if="gameType === 'onuw'">
         
         <!-- ==================== NIGHT (夜间阶段) ==================== -->
-        <view v-if="appState === 'NIGHT'" class="section center-layout night-section">
-      
-      <view class="night-header">
-        <text class="night-title">🌙 夜幕降临</text>
-        <text class="night-info">当前行动: {{ ROLE_NAMES[currentNightRole] || '...' }}</text>
-      </view>
-
-      
-      <view class="flip-container mt">
-        <view class="flipper" :class="{ 'is-flipped': nightPanelOpen }">
-          <!-- 卡牌背面 (默认状态) -->
-          <view class="front" @click.stop="nightPanelOpen = true">
-            <image :src="'/static/cards/back' + randomBackIndex + '.png'" style="width: 100%; height: 100%; border-radius: 20rpx; box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.5);" />
-          </view>
+        <view v-if="appState === 'NIGHT'" class="night-container">
           
-          <!-- 卡牌正面 -->
-          <view class="back role-card-3d">
-            <view class="role-sprite-large onuw-sprite" :style="{'background-position': ROLES_DICTIONARY[myInitialRole]?.spritePosition}"></view>
-          </view>
-        </view>
-
-        <!-- 右侧信息（只在正面朝上时显示） -->
-        <view v-if="nightPanelOpen" class="role-info-side">
-          <text class="card-name">{{ ROLE_NAMES[myInitialRole] }}</text>
-          <text class="player-info">[ {{ mySeatNumber }}号 ] {{ players.find(p => p.sessionId === sessionId)?.nickname || '' }}</text>
-          <text class="card-label" style="font-size: 28rpx; color: #888; margin-bottom: 30rpx;">您的初始底牌</text>
-          <button class="hide-panel-btn" size="mini" @click.stop="nightPanelOpen = false">🙈 收起（防窥）</button>
-        </view>
-      </view>
-
-      <view v-if="nightPanelOpen" class="night-content-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center; margin-top: 40rpx;">
-        <!-- 属于我的回合 -->
-        <view v-if="isMyTurn" class="action-panel active-turn">
-          <text class="action-title">请执行行动</text>
-          
-          <!-- 狼人 -->
-          <view v-if="myInitialRole === 'werewolf'">
-            <view v-if="nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0">
-              <text>你的狼队友是:</text>
-              <text v-for="w in nightViewData.werewolfMates" :key="w" style="font-weight: bold; margin-left: 10rpx;">[ {{ w }}号 ]</text>
+          <view class="night-header-box">
+            <text class="night-moon-title">🌙 夜幕降临</text>
+            <view class="action-turn-pill">
+              <text class="turn-label">当前行动环节：</text>
+              <text class="turn-role-name">{{ ROLE_NAMES[currentNightRole] || '...' }}</text>
             </view>
-            <view v-else>
-              <text>你是孤狼。你可以查看中央的牌:</text>
-              <view class="center-cards mt">
-                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 0 })">查看左侧</button>
-                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 1 })">查看中间</button>
-                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 2 })">查看右侧</button>
+          </view>
+
+          <!-- 3D 翻转卡牌区 (居中自适应) -->
+          <view class="flip-card-wrapper">
+            <view class="flipper" :class="{ 'is-flipped': nightPanelOpen }">
+              <!-- 卡牌背面 (默认状态) -->
+              <view class="front" @click.stop="nightPanelOpen = true">
+                <image :src="'/static/cards/back' + randomBackIndex + '.png'" class="card-img-surface" mode="aspectFill" />
+                <view class="tap-hint-mask">
+                  <text class="tap-hint-text">👆 点击翻开底牌</text>
+                </view>
+              </view>
+              
+              <!-- 卡牌正面 -->
+              <view class="back role-card-3d">
+                <view class="role-sprite-large onuw-sprite" :style="{'background-position': ROLES_DICTIONARY[myInitialRole]?.spritePosition}"></view>
+                <view class="card-name-overlay">
+                  <text class="overlay-role-name">{{ ROLE_NAMES[myInitialRole] }}</text>
+                </view>
               </view>
             </view>
+
+            <!-- 防窥与卡牌信息栏 -->
+            <view v-if="nightPanelOpen" class="role-reveal-bar">
+              <view class="reveal-meta">
+                <text class="reveal-role-title">{{ ROLE_NAMES[myInitialRole] }}</text>
+                <text class="reveal-seat-desc">[{{ mySeatNumber }}号] {{ players.find(p => p.sessionId === sessionId)?.nickname || '' }} · 初始底牌</text>
+              </view>
+              <button class="anti-peep-btn" @click.stop="nightPanelOpen = false">
+                <text>🙈 点击收起防窥</text>
+              </button>
+            </view>
           </view>
 
-          <!-- 预言家 -->
-          <view v-else-if="myInitialRole === 'seer'">
-            <view v-if="nightViewData.seenRole">
-              <text>你看到的牌是: <text style="color: #e74c3c; font-weight: bold;">{{ ROLE_NAMES[nightViewData.seenRole] }}</text></text>
-            </view>
-            <view v-else-if="nightViewData.seenRoles">
-              <text>你看到的中央牌是:</text>
-              <text style="color: #e74c3c; font-weight: bold; display: block; margin-top: 10rpx;">{{ ROLE_NAMES[nightViewData.seenRoles[0]] }} & {{ ROLE_NAMES[nightViewData.seenRoles[1]] }}</text>
-            </view>
-            <view v-else>
-              <text>查看一名其他玩家:</text>
-              <picker class="picker-box mt" mode="selector" :range="otherPlayers" range-key="nickname" @change="onSeerPlayerChange">
-                <view>请选择玩家</view>
-              </picker>
-              <text style="margin: 20rpx 0; display: block;">或者</text>
-              <view class="center-cards mt">
-                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 1] })">看左+中</button>
-                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [1, 2] })">看中+右</button>
-                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 2] })">看左+右</button>
+          <!-- 夜间行动具体控制面板 -->
+          <view v-if="nightPanelOpen" class="night-action-wrapper">
+            
+            <!-- 属于我的行动回合 -->
+            <view v-if="isMyTurn" class="action-panel active-turn">
+              <view class="action-panel-header">
+                <text class="action-panel-title">⚡ 请执行你的专属技能</text>
+              </view>
+              
+              <!-- 狼人 -->
+              <view v-if="myInitialRole === 'werewolf'" class="role-action-content">
+                <view v-if="nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0" class="intel-box">
+                  <text class="intel-label">你的狼同伴：</text>
+                  <view class="mate-badges">
+                    <text v-for="w in nightViewData.werewolfMates" :key="w" class="mate-badge">[ {{ w }}号 ]</text>
+                  </view>
+                </view>
+                <view v-else class="lone-wolf-box">
+                  <text class="intel-label">你是场上唯一的孤狼，可查看一张中央底牌：</text>
+                  <view class="center-cards-row">
+                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 0 })">查看左侧牌</button>
+                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 1 })">查看中间牌</button>
+                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 2 })">查看右侧牌</button>
+                  </view>
+                </view>
+              </view>
+
+              <!-- 预言家 -->
+              <view v-else-if="myInitialRole === 'seer'" class="role-action-content">
+                <view v-if="nightViewData.seenRole" class="intel-box result-highlight">
+                  <text class="intel-label">你查看到的玩家底牌是：</text>
+                  <text class="highlight-value">{{ ROLE_NAMES[nightViewData.seenRole] }}</text>
+                </view>
+                <view v-else-if="nightViewData.seenRoles" class="intel-box result-highlight">
+                  <text class="intel-label">你查看到的中央底牌是：</text>
+                  <text class="highlight-value">{{ ROLE_NAMES[nightViewData.seenRoles[0]] }} 与 {{ ROLE_NAMES[nightViewData.seenRoles[1]] }}</text>
+                </view>
+                <view v-else>
+                  <text class="action-instruction">选择查看一名玩家底牌：</text>
+                  <picker class="picker-box" mode="selector" :range="otherPlayers" range-key="displayName" @change="onSeerPlayerChange">
+                    <view class="picker-inner">🔍 点击选择目标玩家</view>
+                  </picker>
+                  
+                  <text class="divider-text">— 或者选择查看中央两张底牌 —</text>
+                  <view class="center-cards-row">
+                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 1] })">看 左+中</button>
+                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [1, 2] })">看 中+右</button>
+                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 2] })">看 左+右</button>
+                  </view>
+                </view>
+              </view>
+
+              <!-- 强盗 -->
+              <view v-else-if="myInitialRole === 'robber'" class="role-action-content">
+                <view v-if="nightViewData.robbedRole" class="intel-box result-highlight">
+                  <text class="intel-label">抢夺成功！你的新身份是：</text>
+                  <text class="highlight-value">{{ ROLE_NAMES[nightViewData.robbedRole] }}</text>
+                </view>
+                <view v-else>
+                  <text class="action-instruction">选择一名玩家抢夺底牌：</text>
+                  <picker class="picker-box" mode="selector" :range="otherPlayers" range-key="displayName" @change="onRobPlayerChange">
+                    <view class="picker-inner">🗡️ 点击选择抢夺目标</view>
+                  </picker>
+                </view>
+              </view>
+
+              <!-- 捣蛋鬼 -->
+              <view v-else-if="myInitialRole === 'troublemaker'" class="role-action-content">
+                <view v-if="nightViewData.swapped" class="intel-box result-highlight">
+                  <text class="highlight-value">✓ 两名玩家身份已调换成功！</text>
+                </view>
+                <view v-else>
+                  <text class="action-instruction">选择两名其他玩家交换身份：</text>
+                  <picker class="picker-box" mode="selector" :range="otherPlayers" range-key="displayName" @change="(e) => tmP1 = otherPlayers[e.detail.value]">
+                    <view class="picker-inner">玩家 1: {{ tmP1 ? tmP1.displayName : '未选择' }}</view>
+                  </picker>
+                  <picker class="picker-box mt-2" mode="selector" :range="otherPlayers" range-key="displayName" @change="(e) => tmP2 = otherPlayers[e.detail.value]">
+                    <view class="picker-inner">玩家 2: {{ tmP2 ? tmP2.displayName : '未选择' }}</view>
+                  </picker>
+                  <button class="confirm-btn mt-3" hover-class="confirm-btn-hover" @click="doTroublemaker">确认调换身份</button>
+                </view>
+              </view>
+
+              <!-- 酒鬼 -->
+              <view v-else-if="myInitialRole === 'drunk'" class="role-action-content">
+                <view v-if="nightViewData.swapped" class="intel-box result-highlight">
+                  <text class="highlight-value">✓ 已盲换中央底牌，天亮请开始表演！</text>
+                </view>
+                <view v-else>
+                  <text class="action-instruction">盲换中央的一张牌：</text>
+                  <view class="center-cards-row">
+                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 0 })">盲换左侧牌</button>
+                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 1 })">盲换中间牌</button>
+                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 2 })">盲换右侧牌</button>
+                  </view>
+                </view>
+              </view>
+
+              <!-- 爪牙 -->
+              <view v-else-if="myInitialRole === 'minion'" class="role-action-content">
+                <view class="intel-box">
+                  <template v-if="nightViewData.werewolves && nightViewData.werewolves.length > 0">
+                    <text class="intel-label">场上的狼人是：</text>
+                    <view class="mate-badges">
+                      <text v-for="w in nightViewData.werewolves" :key="w" class="mate-badge">[ {{ w }}号 ]</text>
+                    </view>
+                  </template>
+                  <text v-else class="intel-label">场上没有狼人！（狼人牌全在中央）</text>
+                </view>
+              </view>
+              
+              <!-- 守夜人 -->
+              <view v-else-if="myInitialRole === 'mason'" class="role-action-content">
+                <view class="intel-box">
+                  <template v-if="nightViewData.masonMates && nightViewData.masonMates.length > 0">
+                    <text class="intel-label">另一个守夜人同伴是：</text>
+                    <view class="mate-badges">
+                      <text v-for="m in nightViewData.masonMates" :key="m" class="mate-badge">[ {{ m }}号 ]</text>
+                    </view>
+                  </template>
+                  <text v-else class="intel-label">你是场上唯一的守夜人（同伴在中央底牌）</text>
+                </view>
+              </view>
+
+              <!-- 失眠者 -->
+              <view v-else-if="myInitialRole === 'insomniac'" class="role-action-content">
+                <view class="intel-box result-highlight">
+                  <text class="intel-label">你被换牌后的最终底牌是：</text>
+                  <text class="highlight-value">{{ ROLE_NAMES[nightViewData.currentRole] }}</text>
+                </view>
+              </view>
+
+              <!-- 确认操作与放弃行动按钮 -->
+              <view class="action-footer-btns">
+                <view v-if="['werewolf', 'minion', 'mason', 'insomniac'].includes(myInitialRole) || (myInitialRole==='werewolf' && nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0)">
+                  <button class="confirm-btn" hover-class="confirm-btn-hover" @click.stop="submitNightAction({ type: 'CONFIRM' })">确认完毕</button>
+                </view>
+                <view v-else>
+                  <button class="pass-btn" hover-class="pass-btn-hover" @click.stop="submitNightAction({ type: 'NONE' })">放弃行动</button>
+                </view>
               </view>
             </view>
-          </view>
-
-          <!-- 强盗 -->
-          <view v-else-if="myInitialRole === 'robber'">
-            <view v-if="nightViewData.robbedRole">
-              <text>你抢到了: <text style="color: #e74c3c; font-weight: bold;">{{ ROLE_NAMES[nightViewData.robbedRole] }}</text></text>
-            </view>
-            <view v-else>
-              <text>选择一名玩家进行抢夺:</text>
-              <picker class="picker-box mt" mode="selector" :range="otherPlayers" range-key="nickname" @change="onRobPlayerChange">
-                <view>请选择玩家</view>
-              </picker>
+            
+            <!-- 等待他人行动状态 -->
+            <view v-else class="action-panel blind-turn">
+              <view class="waiting-turn-icon">⏳</view>
+              <text class="action-title">夜深人静，请闭眼等待...</text>
+              <text class="waiting-sub">轮到你的角色时将发出提示音与震动</text>
             </view>
           </view>
+        </view>
 
-          <!-- 捣蛋鬼 -->
-          <view v-else-if="myInitialRole === 'troublemaker'">
-            <view v-if="nightViewData.swapped">
-              <text>交换成功！</text>
-            </view>
-            <view v-else>
-              <text>选择两名玩家交换身份:</text>
-              <picker class="picker-box mt" mode="selector" :range="otherPlayers" range-key="nickname" @change="(e) => tmP1 = otherPlayers[e.detail.value]">
-                <view>玩家1: {{ tmP1 ? tmP1.nickname : '未选择' }}</view>
-              </picker>
-              <picker class="picker-box mt" mode="selector" :range="otherPlayers" range-key="nickname" @change="(e) => tmP2 = otherPlayers[e.detail.value]">
-                <view>玩家2: {{ tmP2 ? tmP2.nickname : '未选择' }}</view>
-              </picker>
-              <button class="confirm-btn mt" hover-class="confirm-btn-hover" @click="doTroublemaker">确认交换</button>
-            </view>
+        <!-- ==================== DAY (白天讨论) ==================== -->
+        <view v-else-if="appState === 'DAY'" class="day-wrapper">
+          <view class="day-sun-aura">☀️</view>
+          <text class="day-heading">太阳升起 · 自由发言讨论</text>
+          <text class="day-sub-desc">请通过线下沟通、盘问逻辑与信息差寻找狼人！</text>
+          
+          <view class="glass-section mt-4 day-guide-card">
+            <text class="guide-tip-title">🗣️ 发言提示</text>
+            <text class="guide-tip-text">注意强盗和捣蛋鬼调牌可能导致身份反转。讨论充分后房主可开启投票。</text>
           </view>
 
-          <!-- 酒鬼 -->
-          <view v-else-if="myInitialRole === 'drunk'">
-            <view v-if="nightViewData.swapped">
-              <text>已盲换！</text>
-            </view>
-            <view v-else>
-              <text>盲换中央的牌:</text>
-              <view class="center-cards mt">
-                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 0 })">换左侧</button>
-                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 1 })">换中间</button>
-                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 2 })">换右侧</button>
-              </view>
-            </view>
+          <view class="bottom-action-container" v-if="isHost">
+            <button class="confirm-btn danger-btn" @click="forceVote">房主提前开启全员投票</button>
           </view>
+        </view>
 
-          <!-- 爪牙 -->
-          <view v-else-if="myInitialRole === 'minion'">
-            <text v-if="nightViewData.werewolves && nightViewData.werewolves.length > 0">
-              狼人是: 
-              <text v-for="w in nightViewData.werewolves" :key="w" style="font-weight: bold; margin-left: 10rpx;">[ {{ w }}号 ]</text>
-            </text>
-            <text v-else>场上没有狼人！</text>
+        <!-- ==================== VOTING (投票阶段) ==================== -->
+        <view v-else-if="appState === 'VOTING'" class="voting-wrapper">
+          <view class="voting-header">
+            <text class="voting-title">🗳️ 全员投票放逐</text>
+            <text class="voting-sub">选择你认为最可疑的玩家进行放逐，也可弃权</text>
           </view>
           
-          <!-- 守夜人 -->
-          <view v-else-if="myInitialRole === 'mason'">
-            <text v-if="nightViewData.masonMates && nightViewData.masonMates.length > 0">
-              另一个守夜人是: 
-              <text v-for="m in nightViewData.masonMates" :key="m" style="font-weight: bold; margin-left: 10rpx;">[ {{ m }}号 ]</text>
-            </text>
-            <text v-else>你是唯一的守夜人！</text>
+          <view class="voting-grid">
+            <view 
+              class="vote-player-item" 
+              v-for="p in sortedPlayers" 
+              :key="p.sessionId">
+              <view class="vote-player-info">
+                <view class="vote-seat-badge">{{ p.seatNumber }}</view>
+                <text class="vote-player-name">{{ p.nickname }}</text>
+              </view>
+              <button class="vote-action-btn" hover-class="action-btn-hover" @click="submitVote(p.seatNumber)">投TA</button>
+            </view>
           </view>
 
-          <!-- 失眠者 -->
-          <view v-else-if="myInitialRole === 'insomniac'">
-            <text v-if="nightViewData.currentRole">
-              你现在的牌是: <text style="color: #e74c3c; font-weight: bold;">{{ ROLE_NAMES[nightViewData.currentRole] }}</text>
-            </text>
-          </view>
-
-          <view style="margin-top: 40rpx;" v-if="['werewolf', 'minion', 'mason', 'insomniac'].includes(myInitialRole) || (myInitialRole==='werewolf' && nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0)">
-             <button class="confirm-btn" hover-class="confirm-btn-hover" @click.stop="submitNightAction({ type: 'CONFIRM' })">确认完毕</button>
-          </view>
-          <view style="margin-top: 20rpx;" v-else>
-             <button class="confirm-btn" hover-class="confirm-btn-hover" style="background: linear-gradient(135deg, #e11d48, #be123c) !important; box-shadow: 0 8rpx 20rpx rgba(225, 29, 72, 0.4), inset 0 2rpx 4rpx rgba(255, 255, 255, 0.3) !important;" @click.stop="submitNightAction({ type: 'NONE' })">放弃行动</button>
+          <view class="bottom-action-container">
+            <button class="abstain-btn" @click="submitVote(-1)">🏳️ 放弃本次投票（弃权）</button>
           </view>
         </view>
-        
-        <view v-else class="action-panel blind-turn">
-          <text class="action-title">请等待其他人行动...</text>
-        </view>
-      </view>
-
-    </view>
-
-    <!-- ==================== DAY (白天讨论) ==================== -->
-    <view v-else-if="appState === 'DAY'" class="section center-layout">
-      <text class="day-title">☀️ 太阳升起，请自由讨论</text>
-      <text class="sub-title">请通过线下交流，寻找狼人！</text>
-      <text class="temp-text" style="margin-top: 40rpx;">(讨论结束后由房主开启投票)</text>
-      <button class="btn mt" type="warn" v-if="isHost" @click="forceVote">房主提前进入投票</button>
-    </view>
-
-    <!-- ==================== VOTING (投票阶段) ==================== -->
-    <view v-else-if="appState === 'VOTING'" class="section center-layout">
-      <text class="night-title">🗳️ 投票阶段</text>
-      <text class="sub-title">请选择一名玩家进行放逐 (可弃权)</text>
-      
-      <view class="player-list" style="width: 100%; margin-top: 30rpx;">
-        <view 
-          class="player-item" 
-          v-for="p in sortedPlayers" 
-          :key="p.sessionId"
-          style="display: flex; justify-content: space-between; align-items: center;">
-          <text class="font-bold text-slate-700" style="font-size: 32rpx; margin-right: 16rpx;">[{{ p.seatNumber }}号] {{ p.nickname }}</text>
-          <button class="action-btn" hover-class="action-btn-hover" size="mini" type="primary" @click="submitVote(p.seatNumber)">投票</button>
-        </view>
-        <button class="btn mt" type="default" @click="submitVote(-1)">弃权</button>
-      </view>
-    </view>
       </template>
 
-      
-            <!-- SGS 游戏视图 -->
+      <!-- SGS 游戏视图 -->
       <template v-else-if="gameType === 'sgs'">
-        <view v-if="appState === 'PLAYING'" class="section center-layout night-section">
-          <text class="night-title" style="margin-bottom: 40rpx; color: #38bdf8;">三国杀身份确认</text>
-          <text v-if="nightPanelOpen && myInitialRole === 'lord'" style="color: #ffd700; font-weight: bold; font-size: 36rpx; text-shadow: 0 4rpx 10rpx rgba(0,0,0,0.8); margin-bottom: 20rpx; padding: 10rpx 30rpx; background: rgba(0,0,0,0.6); border-radius: 20rpx; border: 2px solid #ffd700;">⚠️ 您的身份需要向全场公开</text>
+        <view v-if="appState === 'PLAYING'" class="night-container">
+          <view class="night-header-box">
+            <text class="night-moon-title" style="color: #38bdf8;">🗡️ 三国杀身份确认</text>
+          </view>
           
-          <view class="flip-container mt">
+          <view v-if="nightPanelOpen && myInitialRole === 'lord'" class="lord-public-alert">
+            <text>👑 您的身份是主公，需向全场公开！</text>
+          </view>
+          
+          <view class="flip-card-wrapper">
             <view class="flipper" :class="{ 'is-flipped': nightPanelOpen }">
               <view class="front" @click.stop="nightPanelOpen = true">
                 <view class="sgs-back"></view>
+                <view class="tap-hint-mask">
+                  <text class="tap-hint-text">👆 点击确认身份</text>
+                </view>
               </view>
               
               <view class="back role-card-3d" style="border: none; background: #000; padding: 0;">
                 <view class="role-sprite-large sgs-sprite" :style="{'background-position': ROLES_DICTIONARY[myInitialRole]?.spritePosition}"></view>
               </view>
             </view>
-          </view>
-          
-          <view v-if="nightPanelOpen" class="role-info-side" style="margin-top: 40rpx; align-items: center; width: 100%;">
-            <button class="hide-panel-btn" size="mini" @click.stop="nightPanelOpen = false">🙈 收起（防窥）</button>
+
+            <view v-if="nightPanelOpen" class="role-reveal-bar">
+              <button class="anti-peep-btn" @click.stop="nightPanelOpen = false">
+                <text>🙈 点击收起防窥</text>
+              </button>
+            </view>
           </view>
         </view>
       </template>
@@ -1028,6 +1310,17 @@ const getRoleCount = (roleId) => {
   return selectedRoles.value.filter(r => r === roleId).length;
 };
 
+const onCardTap = (roleId) => {
+  if (getRoleCount(roleId) === 0) {
+    changeRoleCount(roleId, 1);
+  }
+};
+
+const emptySeatsCount = computed(() => {
+  const targetTotal = players.value.length < 6 ? 6 : (players.value.length < 8 ? 8 : 10);
+  return Math.max(0, targetTotal - players.value.length);
+});
+
 const changeRoleCount = (roleId, delta) => {
   if (roleId === 'mason') {
     if (delta === 1) {
@@ -1161,349 +1454,1795 @@ const submitVote = (targetseatNumber) => {
 </script>
 
 <style scoped>
-.container { padding: 40rpx; min-height: 100vh; background-color: #f5f5f5; }
-.header { width: 100%; margin-bottom: 40rpx; display: flex; flex-direction: column; }
-.header-lobby { text-align: center; }
-.title { font-size: 48rpx; font-weight: bold; color: #2c3e50; }
+/* 全局页面容器：暗夜魔幻桌游聚会氛围 */
+.container {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: radial-gradient(circle at 50% 10%, #172554 0%, #090d16 45%, #050811 100%);
+  padding: calc(16rpx + var(--sat, 0px)) 24rpx calc(48rpx + var(--sab, 0px)) 24rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-.header-inner {
+/* ================== 一体化游戏顶栏：酒馆房间铭牌与功能区 ================== */
+.app-topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  max-width: 800rpx;
+  padding: 10rpx 0 20rpx 0;
+  z-index: 50;
+  box-sizing: border-box;
 }
 
-.room-pill-btn {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  padding: 12rpx 24rpx;
-  border-radius: 999rpx;
+.topbar-left, .topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.topbar-center {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.room-pill-text {
-  font-size: 26rpx;
-  color: #2563eb;
-  font-weight: bold;
+/* 酒馆金饰房间铭牌 */
+.tavern-room-crest {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+  border: 1.5px solid rgba(245, 158, 11, 0.45);
+  border-radius: 999rpx;
+  padding: 8rpx 18rpx 8rpx 22rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 215, 0, 0.25);
+  transition: transform 0.2s ease;
+  cursor: pointer;
 }
 
-.pulse-animation {
-  animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(0.98); }
-}
-
-.header-actions {
-  display: flex;
-  gap: 16rpx;
-  align-items: center;
-}
-
-.header-btn {
-  font-size: 26rpx;
-  padding: 10rpx 20rpx;
-  border-radius: 8rpx;
-}
-
-.ghost-btn {
-  color: #64748b;
-  background: rgba(100, 116, 139, 0.1);
-}
-
-.danger-text {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
-}
-
-.section { background: #fff; padding: 30rpx; border-radius: 16rpx; box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05); }
-
-/* Vue Transition Fade for Modal */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+.tavern-room-crest:active {
   transform: scale(0.95);
 }
 
-.input { border: 1px solid #ddd; padding: 20rpx; margin-bottom: 30rpx; border-radius: 8rpx; }
-.btn { width: 100%; }
-.mt { margin-top: 30rpx; }
-
-.room-title { font-size: 36rpx; font-weight: bold; margin-bottom: 20rpx; display: block; }
-.sub-title { font-size: 28rpx; color: #666; margin-bottom: 20rpx; display: block; }
-
-.player-list { margin-bottom: 40rpx; }
-.player-item { padding: 16rpx 0; border-bottom: 1px solid #eee; font-size: 32rpx; }
-.host-tag { color: #f29c1f; font-size: 24rpx; }
-
-.roles-grid { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 20rpx; }
-.role-tag { 
-  padding: 10rpx 20rpx; 
-  background: #eee; 
-  border-radius: 8rpx; 
-  font-size: 28rpx; 
-  border: 1px solid transparent; 
+.crest-frame {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
 }
-.role-tag.active { background: #e6f7ff; border-color: #1890ff; color: #1890ff; }
 
-/* 夜间面板特有样式 */
-.recommend-box { background: #fdf2e9; padding: 20rpx; border-radius: 12rpx; border: 1px solid #fae5d3; }
-.roles-grid { display: flex; flex-direction: column; gap: 16rpx; margin-top: 20rpx; }
-.role-counter-item { 
-  display: flex; justify-content: space-between; align-items: center; 
-  padding: 16rpx 24rpx; background: #fff; border-radius: 12rpx; border: 1px solid #eee;
+.crest-label {
+  font-size: 20rpx;
+  color: #fbbf24;
+  font-weight: 800;
+  letter-spacing: 1rpx;
 }
-.role-name { font-size: 30rpx; color: #333; }
-.stepper { display: flex; align-items: center; gap: 20rpx; }
-.step-btn { 
-  width: 50rpx; height: 50rpx; background: #f0f0f0; border-radius: 8rpx; 
-  text-align: center; line-height: 50rpx; font-size: 36rpx; font-weight: bold; color: #555;
+
+.crest-id {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #f8fafc;
+  letter-spacing: 4rpx;
+  text-shadow: 0 0 16rpx rgba(245, 158, 11, 0.4);
 }
-.step-val { font-size: 32rpx; width: 40rpx; text-align: center; }
 
-.center-layout { display: flex; flex-direction: column; align-items: center; }
-.night-header { text-align: center; margin-bottom: 60rpx; }
-.night-title { font-size: 44rpx; color: #2c3e50; display: block; font-weight: bold; }
-.night-info { font-size: 32rpx; color: #e74c3c; display: block; margin-top: 10rpx; }
+.crest-invite-chip {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-radius: 999rpx;
+  padding: 2rpx 12rpx;
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  margin-left: 6rpx;
+  box-shadow: 0 2rpx 8rpx rgba(245, 158, 11, 0.4);
+}
 
-.role-card-3d { 
-  width: 320rpx; 
-  height: 448rpx;
-  background: #2c3e50; 
-  border-radius: 20rpx; 
-  display: flex; 
-  flex-direction: column; 
-  align-items: center; 
+.invite-icon { font-size: 18rpx; }
+.invite-title { font-size: 18rpx; color: #1e1b4b; font-weight: 900; }
+
+.seat-badge-chip {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.3), rgba(30, 58, 138, 0.4));
+  border: 1.5px solid rgba(96, 165, 250, 0.5);
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  box-shadow: 0 0 16rpx rgba(37, 99, 235, 0.35);
+}
+
+.seat-badge-text {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.topbar-btn {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  box-shadow: inset 0 0 30rpx rgba(0,0,0,0.6), 0 16rpx 40rpx rgba(0,0,0,0.4);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.topbar-btn:active {
+  transform: scale(0.92);
+}
+
+.icon-btn {
+  width: 66rpx;
+  height: 66rpx;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.4);
+}
+
+.btn-emoji {
+  font-size: 30rpx;
+}
+
+.action-pill {
+  padding: 8rpx 22rpx;
+  border-radius: 999rpx;
+}
+
+.action-pill .pill-text {
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.danger-pill {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+.danger-pill .pill-text { color: #f87171; }
+
+.ghost-pill {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+.ghost-pill .pill-text { color: #cbd5e1; }
+
+/* ================== 游戏级板块容器 (Game Plate) ================== */
+.game-plate {
+  background: rgba(15, 21, 35, 0.82);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1.5px solid rgba(245, 158, 11, 0.18);
+  border-radius: 28rpx;
+  padding: 24rpx 20rpx;
+  box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.plate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding-bottom: 12rpx;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.plate-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.plate-icon {
+  font-size: 30rpx;
+}
+
+.plate-title {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 1rpx;
+}
+
+.player-count-pill {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 999rpx;
+  padding: 2rpx 14rpx;
+  display: flex;
+  align-items: baseline;
+  margin-left: 6rpx;
+}
+
+.count-num {
+  font-size: 24rpx;
+  font-weight: 900;
+  color: #fbbf24;
+}
+
+.count-max {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.plate-status-tip {
+  font-size: 20rpx;
+  color: #94a3b8;
+}
+
+.mt-2 { margin-top: 16rpx; }
+.mt-3 { margin-top: 24rpx; }
+.mt-4 { margin-top: 32rpx; }
+.mb-6 { margin-bottom: 48rpx; }
+
+/* ================== WAITING (准备大厅) ================== */
+.waiting-wrapper {
+  width: 100%;
+  max-width: 800rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  padding-bottom: 30rpx;
+}
+
+/* 席位围桌网格 (5列双排自适应席位台) */
+.table-seats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16rpx 8rpx;
+  padding: 8rpx 0;
+}
+
+.seat-podium {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.host-floating-crown {
+  position: absolute;
+  top: -18rpx;
+  font-size: 28rpx;
+  z-index: 10;
+  animation: crownFloat 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes crownFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-4rpx); }
+}
+
+.podium-avatar-wrapper {
+  position: relative;
+  width: 90rpx;
+  height: 90rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-aura-ring {
+  position: absolute;
+  top: -4rpx;
+  left: -4rpx;
+  right: -4rpx;
+  bottom: -4rpx;
+  border-radius: 50%;
+  border: 2rpx solid transparent;
+  transition: all 0.3s ease;
+}
+
+.seat-podium.is-ready .avatar-aura-ring {
+  border-color: #10b981;
+  box-shadow: 0 0 16rpx rgba(16, 185, 129, 0.7);
+  animation: auraPulse 2s infinite ease-in-out;
+}
+
+.seat-podium.is-me .avatar-aura-ring {
+  border-color: #ffd700;
+  box-shadow: 0 0 16rpx rgba(255, 215, 0, 0.6);
+}
+
+@keyframes auraPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+.podium-avatar {
+  width: 82rpx;
+  height: 82rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 2rpx solid rgba(255, 215, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.5), inset 0 2rpx 0 rgba(255, 255, 255, 0.15);
+}
+
+.avatar-char {
+  font-size: 34rpx;
+  color: #f8fafc;
+  font-weight: 900;
+}
+
+.seat-index-badge {
+  position: absolute;
+  bottom: -4rpx;
+  right: -4rpx;
+  width: 30rpx;
+  height: 30rpx;
+  border-radius: 50%;
+  background: #1e3a8a;
+  color: #93c5fd;
+  font-size: 18rpx;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid #0f172a;
+}
+
+.podium-name-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4rpx;
+  margin-top: 8rpx;
+  width: 100%;
+}
+
+.podium-nickname {
+  font-size: 20rpx;
+  color: #cbd5e1;
+  font-weight: 700;
+  max-width: 104rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.self-jewel-tag {
+  background: linear-gradient(135deg, #ffd700, #f59e0b);
+  color: #451a03;
+  font-size: 16rpx;
+  font-weight: 900;
+  padding: 0 6rpx;
+  border-radius: 6rpx;
+  line-height: 24rpx;
+}
+
+.podium-status {
+  margin-top: 4rpx;
+}
+
+.badge-host {
+  color: #fbbf24;
+  font-size: 18rpx;
+  font-weight: 800;
+}
+
+.badge-ready {
+  color: #34d399;
+  font-size: 18rpx;
+  font-weight: 800;
+}
+
+.badge-waiting {
+  color: #64748b;
+  font-size: 18rpx;
+  font-weight: 600;
+}
+
+.badge-offline {
+  color: #f87171;
+  font-size: 18rpx;
+  font-weight: 600;
+}
+
+/* 空席位槽位 */
+.seat-podium.empty-slot {
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.seat-podium.empty-slot:active {
+  opacity: 0.85;
+  transform: scale(0.95);
+}
+
+.empty-podium-avatar {
+  width: 82rpx;
+  height: 82rpx;
+  border-radius: 50%;
+  border: 2rpx dashed rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-plus {
+  font-size: 38rpx;
+  color: #64748b;
+  font-weight: 300;
+}
+
+.empty-slot-text {
+  font-size: 18rpx;
+  color: #64748b;
+  margin-top: 8rpx;
+}
+
+.empty-invite-hint {
+  font-size: 16rpx;
+  color: #3b82f6;
+  font-weight: 700;
+  margin-top: 2rpx;
+}
+
+/* ================== 阵营艺术选择卡 (Game Mode Deck) ================== */
+.game-mode-deck {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 8rpx;
+}
+
+.mode-banner {
+  flex: 1;
+  border-radius: 20rpx;
+  padding: 20rpx 10rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  background: rgba(10, 15, 26, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.mode-banner:active {
+  transform: scale(0.97);
+}
+
+.banner-crest {
+  font-size: 40rpx;
+  margin-bottom: 6rpx;
+}
+
+.banner-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.banner-title {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #cbd5e1;
+  text-align: center;
+}
+
+.banner-desc {
+  font-size: 18rpx;
+  color: #64748b;
+  margin-top: 2rpx;
+  text-align: center;
+}
+
+.banner-active-check {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 26rpx;
+  height: 26rpx;
+  border-radius: 50%;
+  background: #ffd700;
+  color: #000;
+  font-size: 16rpx;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mode-banner.active {
+  border-color: rgba(245, 158, 11, 0.85);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+  box-shadow: 0 8rpx 24rpx rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 215, 0, 0.4);
+}
+
+.mode-banner.active .banner-title {
+  color: #ffd700;
+  text-shadow: 0 0 12rpx rgba(245, 158, 11, 0.5);
+}
+
+/* ================== 卡牌集换台配置 (Deck Config) ================== */
+.deck-config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+  margin-top: 20rpx;
+}
+
+/* 角色底牌平衡卡 */
+.board-balance-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(10, 15, 26, 0.65);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20rpx;
+  padding: 18rpx 24rpx;
+  transition: all 0.3s ease;
+}
+
+.board-balance-card.is-balanced {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(10, 15, 26, 0.65));
+}
+
+.balance-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-title {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.balance-subtitle {
+  font-size: 20rpx;
+  color: #94a3b8;
+  margin-top: 4rpx;
+}
+
+.balance-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.balance-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 4rpx;
+}
+
+.balance-current {
+  font-size: 38rpx;
+  font-weight: 900;
+  color: #f8fafc;
+}
+
+.board-balance-card.is-balanced .balance-current {
+  color: #34d399;
+}
+
+.balance-divider {
+  font-size: 24rpx;
+  color: #64748b;
+  margin: 0 4rpx;
+}
+
+.balance-total {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.balance-unit {
+  font-size: 20rpx;
+  color: #94a3b8;
+}
+
+.balance-tag {
+  font-size: 20rpx;
+  font-weight: 800;
+  color: #f87171;
+  margin-top: 2rpx;
+}
+
+.board-balance-card.is-balanced .balance-tag {
+  color: #34d399;
+}
+
+/* 快速推荐横滑条 */
+.quick-preset-bar {
+  background: rgba(10, 15, 26, 0.5);
+  border-radius: 18rpx;
+  padding: 16rpx 20rpx;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.preset-label-row {
+  margin-bottom: 12rpx;
+}
+
+.preset-title {
+  font-size: 22rpx;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.preset-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.preset-chips-track {
+  display: inline-flex;
+  gap: 12rpx;
+  padding: 4rpx 2rpx;
+}
+
+.preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-chip:active {
+  transform: scale(0.95);
+}
+
+.chip-name {
+  font-size: 22rpx;
+  color: #f1f5f9;
+  font-weight: 700;
+}
+
+.preset-chip.is-matching-players {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(217, 119, 6, 0.2));
+  border-color: rgba(245, 158, 11, 0.85);
+  box-shadow: 0 0 16rpx rgba(245, 158, 11, 0.35);
+}
+
+.preset-chip.is-matching-players .chip-name {
+  color: #ffd700;
+}
+
+.chip-fire { font-size: 20rpx; }
+
+.chip-tag {
+  background: #f59e0b;
+  color: #000;
+  font-size: 16rpx;
+  font-weight: 900;
+  padding: 2rpx 8rpx;
+  border-radius: 6rpx;
+  margin-left: 2rpx;
+}
+
+/* ================== 集换式角色卡牌图鉴网格 ================== */
+.card-deck-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14rpx;
+}
+
+.tarot-card {
+  border-radius: 18rpx;
+  padding: 16rpx 10rpx 14rpx 10rpx;
+  background: rgba(10, 15, 26, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  filter: grayscale(0.4);
+  opacity: 0.78;
+}
+
+.tarot-card:active {
+  transform: scale(0.96);
+}
+
+.tarot-card.is-active {
+  filter: none;
+  opacity: 1;
+  border-color: rgba(245, 158, 11, 0.75);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 215, 0, 0.35);
+}
+
+.wax-seal-badge {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  background: linear-gradient(135deg, #e11d48, #be123c);
+  border: 2rpx solid #ffd700;
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 900;
+  padding: 2rpx 12rpx;
+  border-radius: 999rpx;
+  box-shadow: 0 4rpx 12rpx rgba(225, 29, 72, 0.5);
+  z-index: 10;
+  animation: sealPop 0.3s ease;
+}
+
+@keyframes sealPop {
+  0% { transform: scale(0.5); }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.card-portrait-box {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2rpx solid rgba(255, 215, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8rpx;
+}
+
+.tarot-sprite {
+  width: 96rpx;
+  height: 96rpx;
+  background-size: 400% 400%;
+}
+
+.card-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.card-name {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #f1f5f9;
+  text-align: center;
+  margin-bottom: 8rpx;
+}
+
+.tarot-card.is-active .card-name {
+  color: #ffd700;
+}
+
+.card-micro-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  width: 100%;
+}
+
+.stepper-btn {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 10rpx;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #cbd5e1;
+  transition: all 0.2s ease;
+}
+
+.stepper-btn:active {
+  background: rgba(245, 158, 11, 0.4);
+  transform: scale(0.9);
+}
+
+.stepper-btn.disabled {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.stepper-count {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #ffd700;
+  width: 30rpx;
+  text-align: center;
+}
+
+/* 阿瓦隆说明卡 */
+.avalon-rules-card {
+  background: rgba(10, 15, 26, 0.65);
+  border-radius: 18rpx;
+  padding: 20rpx;
+  margin-top: 14rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rule-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.rule-icon { font-size: 28rpx; }
+.rule-text { font-size: 24rpx; color: #cbd5e1; font-weight: 600; }
+.rule-hint { font-size: 22rpx; color: #94a3b8; line-height: 1.5; margin-top: 8rpx; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10rpx; }
+
+/* ================== 传奇级游戏主操作栏 (Epic Action Dock) ================== */
+.epic-dock-container {
+  width: 100%;
+  margin-top: 28rpx;
+}
+
+.epic-start-btn, .epic-ready-btn {
+  width: 100%;
+  height: 104rpx;
+  border-radius: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14rpx;
   position: relative;
   overflow: hidden;
-  border: 4rpx solid #34495e;
+  border: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
 }
+
+.epic-start-btn::after, .epic-ready-btn::after { border: none; }
+
+.epic-start-btn {
+  background: rgba(100, 116, 139, 0.25);
+  color: #64748b;
+  box-shadow: none;
+}
+
+.epic-start-btn.is-clickable {
+  background: linear-gradient(135deg, #ffd700 0%, #f59e0b 50%, #d97706 100%);
+  color: #451a03;
+  box-shadow: 0 12rpx 36rpx rgba(245, 158, 11, 0.45), inset 0 2rpx 0 rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.epic-start-btn.is-clickable:active {
+  transform: translateY(2rpx) scale(0.98);
+  box-shadow: 0 6rpx 18rpx rgba(245, 158, 11, 0.35);
+}
+
+.epic-ready-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 12rpx 36rpx rgba(37, 99, 235, 0.45), inset 0 2rpx 0 rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+}
+
+.epic-ready-btn:active {
+  transform: translateY(2rpx) scale(0.98);
+}
+
+.epic-ready-btn.is-ready-active {
+  background: rgba(239, 68, 68, 0.15);
+  border: 2rpx solid rgba(239, 68, 68, 0.55);
+  color: #f87171;
+  box-shadow: none;
+}
+
+.epic-icon { font-size: 34rpx; }
+.epic-label { font-size: 32rpx; font-weight: 900; letter-spacing: 1rpx; }
+
+/* 扫光微动效 */
+.btn-sheen-sweep {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  animation: sheenSweep 3.2s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes sheenSweep {
+  0% { left: -100%; }
+  35%, 100% { left: 200%; }
+}
+
+/* 普通玩家提示横幅 */
+.guest-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(10, 15, 26, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+}
+
+.guest-mode-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.guest-mode-hint { font-size: 20rpx; color: #94a3b8; }
+.guest-mode-title { font-size: 28rpx; color: #f8fafc; font-weight: 800; margin-top: 4rpx; }
+
+.guest-ready-status {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: rgba(100, 116, 139, 0.15);
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+}
+
+.status-indicator-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: #64748b;
+}
+
+.status-indicator-text {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.guest-ready-status.ready-done {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.guest-ready-status.ready-done .status-indicator-dot {
+  background: #10b981;
+  box-shadow: 0 0 10rpx #10b981;
+}
+
+.guest-ready-status.ready-done .status-indicator-text {
+  color: #34d399;
+}
+
+/* ================== NIGHT (夜间阶段) ================== */
+.night-container {
+  width: 100%;
+  max-width: 760rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.night-header-box {
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.night-moon-title {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: #f8fafc;
+  display: block;
+  letter-spacing: 2rpx;
+  text-shadow: 0 0 30rpx rgba(96, 165, 250, 0.6);
+}
+
+.action-turn-pill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8rpx 24rpx;
+  border-radius: 999rpx;
+  margin-top: 14rpx;
+}
+
+.turn-label { font-size: 24rpx; color: #94a3b8; }
+.turn-role-name { font-size: 26rpx; color: #38bdf8; font-weight: 800; }
+
+/* 3D 翻转卡牌 */
+.flip-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  perspective: 1000px;
+  width: 100%;
+}
+
+.flipper {
+  width: 320rpx;
+  height: 448rpx;
+  position: relative;
+  transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.flipper.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.front, .back {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  backface-visibility: hidden;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 20rpx 50rpx rgba(0, 0, 0, 0.6);
+}
+
+.front {
+  z-index: 2;
+  transform: rotateY(0deg);
+  cursor: pointer;
+}
+
+.card-img-surface {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.tap-hint-mask {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+  padding: 30rpx 0 20rpx 0;
+  text-align: center;
+}
+
+.tap-hint-text {
+  font-size: 24rpx;
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+.back {
+  transform: rotateY(180deg);
+}
+
+.role-card-3d {
+  width: 100%;
+  height: 100%;
+  background: #0f172a;
+  border: 4rpx solid #38bdf8;
+  box-shadow: inset 0 0 30rpx rgba(0,0,0,0.6), 0 0 40rpx rgba(56, 189, 248, 0.4);
+  position: relative;
+  box-sizing: border-box;
+}
+
 .role-sprite-large {
   width: 100%;
   height: 100%;
-  opacity: 0.95;
 }
+
 .card-name-overlay {
   position: absolute;
   bottom: 0;
   width: 100%;
   text-align: center;
-  font-size: 44rpx;
+  background: linear-gradient(transparent, rgba(0,0,0,0.9) 60%);
+  padding: 40rpx 0 16rpx 0;
+}
+
+.overlay-role-name {
+  font-size: 42rpx;
   font-weight: 900;
   color: #fff;
-  text-shadow: 0 4rpx 12rpx rgba(0,0,0,0.9);
   letter-spacing: 4rpx;
-  background: linear-gradient(transparent, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.95));
-  padding-top: 50rpx;
-  padding-bottom: 20rpx;
+  text-shadow: 0 4rpx 12rpx rgba(0,0,0,0.9);
 }
-.card-label { color: #bdc3c7; font-size: 24rpx; margin-bottom: 20rpx; }
-.card-name { color: #fff; font-size: 48rpx; font-weight: bold; }
 
-.action-panel { width: 100%; padding: 40rpx; border-radius: 16rpx; text-align: center; }
-.active-turn { 
-  background: linear-gradient(145deg, #1e293b, #0f172a); 
-  border: 1px solid rgba(56, 189, 248, 0.3); 
-  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.5); 
-  color: #f1f5f9; 
+.role-reveal-bar {
+  margin-top: 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  width: 100%;
 }
-.blind-turn { 
-  background: rgba(15, 23, 42, 0.8); 
-  border: 2px dashed rgba(255, 255, 255, 0.2); 
-  color: #94a3b8; 
-  opacity: 0.9; 
-}
-.action-title { 
-  font-size: 36rpx; 
-  font-weight: 800; 
-  margin-bottom: 24rpx; 
-  display: block; 
-  color: #38bdf8; 
-  letter-spacing: 2rpx; 
-}
-.temp-text { color: #7f8c8d; font-size: 28rpx; }
 
-.action-btn {
-  background: linear-gradient(145deg, #334155, #1e293b) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: #f8fafc !important;
-  border-radius: 16rpx !important;
-  padding: 10rpx 30rpx !important;
-  font-size: 28rpx !important;
-  font-weight: bold !important;
-  box-shadow: inset 0 2rpx 4rpx rgba(255, 255, 255, 0.1), 0 4rpx 10rpx rgba(0,0,0,0.4) !important;
-  transition: all 0.2s ease;
-  margin: 0 10rpx;
+.reveal-meta {
+  text-align: center;
 }
-.action-btn-hover {
-  transform: scale(0.95);
-  background: linear-gradient(145deg, #1e293b, #0f172a) !important;
-  box-shadow: inset 0 4rpx 10rpx rgba(0,0,0,0.6) !important;
-}
-.confirm-btn {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
-  color: #ffffff !important;
-  font-size: 34rpx !important;
-  font-weight: 900 !important;
-  border-radius: 20rpx !important;
-  padding: 20rpx 0 !important;
-  width: 90%;
-  margin: 20rpx auto 0 !important;
-  box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.4), inset 0 2rpx 4rpx rgba(255, 255, 255, 0.3) !important;
-  border: none !important;
-  transition: all 0.2s ease;
+
+.reveal-role-title {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: #f8fafc;
   display: block;
 }
-.confirm-btn-hover {
-  transform: scale(0.95);
-  box-shadow: 0 4rpx 10rpx rgba(16, 185, 129, 0.3), inset 0 4rpx 12rpx rgba(0, 0, 0, 0.2) !important;
+
+.reveal-seat-desc {
+  font-size: 24rpx;
+  color: #94a3b8;
+  margin-top: 6rpx;
+  display: block;
 }
-.action-panel text {
+
+.anti-peep-btn {
+  background: rgba(100, 116, 139, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  font-size: 26rpx;
+  font-weight: 700;
+  border-radius: 999rpx;
+  padding: 12rpx 36rpx;
+  transition: all 0.2s ease;
+}
+
+.anti-peep-btn:active {
+  background: rgba(100, 116, 139, 0.4);
+  transform: scale(0.95);
+}
+
+/* 夜间操作控制面板 */
+.night-action-wrapper {
+  width: 100%;
+  margin-top: 30rpx;
+}
+
+.action-panel {
+  width: 100%;
+  border-radius: 28rpx;
+  padding: 32rpx 24rpx;
+  box-sizing: border-box;
+}
+
+.active-turn {
+  background: rgba(18, 24, 38, 0.85);
+  backdrop-filter: blur(24px);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.6), 0 0 30rpx rgba(56, 189, 248, 0.15);
+}
+
+.blind-turn {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1.5px dashed rgba(255, 255, 255, 0.15);
+  text-align: center;
+  padding: 48rpx 24rpx;
+}
+
+.waiting-turn-icon {
+  font-size: 64rpx;
+  margin-bottom: 16rpx;
+  animation: pulse 2s infinite;
+}
+
+.action-panel-header {
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+.action-panel-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 1rpx;
+}
+
+.waiting-sub {
+  font-size: 24rpx;
+  color: #64748b;
+  margin-top: 10rpx;
+  display: block;
+}
+
+.role-action-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.intel-box {
+  background: rgba(10, 15, 26, 0.7);
+  border-radius: 18rpx;
+  padding: 20rpx;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.intel-label {
+  font-size: 26rpx;
+  color: #cbd5e1;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.mate-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.mate-badge {
+  background: rgba(220, 38, 38, 0.25);
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  color: #f87171;
+  font-size: 26rpx;
+  font-weight: 800;
+  padding: 6rpx 16rpx;
+  border-radius: 10rpx;
+}
+
+.result-highlight {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.highlight-value {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #38bdf8;
+}
+
+.center-cards-row {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 14rpx;
+}
+
+.action-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  font-size: 26rpx;
+  font-weight: 700;
+  border-radius: 16rpx;
+  padding: 16rpx 0;
+  text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.action-btn::after { border: none; }
+.action-btn-hover {
+  transform: scale(0.96);
+  background: #2563eb;
+}
+
+.action-instruction {
+  font-size: 26rpx;
+  color: #cbd5e1;
+  font-weight: 600;
+  display: block;
+}
+
+.divider-text {
+  font-size: 22rpx;
+  color: #64748b;
+  text-align: center;
+  display: block;
+  margin: 16rpx 0;
+}
+
+.picker-box {
+  background: rgba(10, 15, 26, 0.8);
+  border: 1.5px solid rgba(56, 189, 248, 0.3);
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  margin-top: 12rpx;
+}
+
+.picker-inner {
+  font-size: 28rpx;
+  color: #f8fafc;
+  font-weight: 600;
+  text-align: center;
+}
+
+.action-footer-btns {
+  margin-top: 30rpx;
+  width: 100%;
+}
+
+.confirm-btn {
+  width: 100%;
+  height: 92rpx;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 800;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(16, 185, 129, 0.4);
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.confirm-btn::after { border: none; }
+.confirm-btn:active { transform: scale(0.98); }
+
+.pass-btn {
+  width: 100%;
+  height: 92rpx;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1.5px solid rgba(239, 68, 68, 0.5);
+  color: #f87171;
+  font-size: 30rpx;
+  font-weight: 700;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.pass-btn::after { border: none; }
+.pass-btn:active { transform: scale(0.98); background: rgba(239, 68, 68, 0.25); }
+
+/* ================== DAY (白天自由讨论) ================== */
+.day-wrapper {
+  width: 100%;
+  max-width: 760rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40rpx 0;
+}
+
+.day-sun-aura {
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+  filter: drop-shadow(0 0 30rpx #f59e0b);
+  animation: pulse 3s infinite ease-in-out;
+}
+
+.day-heading {
+  font-size: 42rpx;
+  font-weight: 900;
+  color: #f8fafc;
+  letter-spacing: 2rpx;
+}
+
+.day-sub-desc {
+  font-size: 26rpx;
+  color: #94a3b8;
+  margin-top: 12rpx;
+}
+
+.day-guide-card {
+  text-align: left;
+  margin-top: 40rpx;
+}
+
+.guide-tip-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #f59e0b;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.guide-tip-text {
+  font-size: 24rpx;
+  color: #cbd5e1;
   line-height: 1.6;
 }
 
+.danger-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  box-shadow: 0 8rpx 24rpx rgba(239, 68, 68, 0.4) !important;
+}
 
-.night-mask { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60rpx 40rpx; background: #f8f9fa; border-radius: 16rpx; border: 2px dashed #ced4da; margin-top: 40rpx; }
-.mask-title { font-size: 40rpx; font-weight: bold; margin-bottom: 20rpx; color: #2c3e50; }
-.mask-sub { font-size: 28rpx; color: #7f8c8d; text-align: center; line-height: 1.5; }
-
-.show-panel-btn {
+/* ================== VOTING (投票阶段) ================== */
+.voting-wrapper {
   width: 100%;
-  background: #2c3e50;
-  color: #fff;
-  font-size: 32rpx;
-  font-weight: bold;
-  padding: 28rpx 0;
-  border-radius: 12rpx;
-  margin-bottom: 24rpx;
-  border: none;
+  max-width: 760rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.hide-panel-btn {
-  background: #7f8c8d;
-  color: #fff;
-  font-size: 24rpx;
+.voting-header {
+  text-align: center;
   margin-bottom: 30rpx;
-  border: none;
 }
 
-.guide-float-btn {
-  position: fixed;
-  top: 40rpx;
-  right: 40rpx;
-  width: 88rpx;
-  height: 88rpx;
-  background: rgba(52, 152, 219, 0.9);
-  border-radius: 999rpx;
+.voting-title {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #f8fafc;
+  display: block;
+}
+
+.voting-sub {
+  font-size: 24rpx;
+  color: #94a3b8;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.voting-grid {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.vote-player-item {
+  background: rgba(18, 24, 38, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20rpx;
+  padding: 18rpx 24rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vote-player-info {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(52, 152, 219, 0.4);
-  z-index: 999;
+  gap: 16rpx;
 }
 
-.guide-icon {
-  font-size: 48rpx;
+.vote-seat-badge {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  background: #2563eb;
   color: #fff;
-  font-weight: bold;
-}
-
-.audio-test-btn {
-  position: fixed;
-  top: 40rpx;
-  right: 148rpx;
-  width: 88rpx;
-  height: 88rpx;
-  background: rgba(241, 196, 15, 0.9);
-  border-radius: 999rpx;
+  font-size: 26rpx;
+  font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(241, 196, 15, 0.4);
-  z-index: 999;
 }
 
-.audio-icon {
-  font-size: 44rpx;
+.vote-player-name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #f8fafc;
 }
 
+.vote-action-btn {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 800;
+  border-radius: 14rpx;
+  padding: 10rpx 28rpx;
+  border: none;
+  box-shadow: 0 4rpx 12rpx rgba(239, 68, 68, 0.4);
+}
+
+.vote-action-btn::after { border: none; }
+.vote-action-btn:active { transform: scale(0.95); }
+
+.abstain-btn {
+  width: 100%;
+  height: 88rpx;
+  background: rgba(100, 116, 139, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 28rpx;
+  font-weight: 700;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.abstain-btn::after { border: none; }
+.abstain-btn:active { background: rgba(100, 116, 139, 0.35); transform: scale(0.98); }
+
+/* ================== END (复盘结算) ================== */
+.end-section-container {
+  width: 100%;
+  max-width: 760rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.victory-banner {
+  border-radius: 28rpx;
+  padding: 40rpx 30rpx;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 20rpx 50rpx rgba(0, 0, 0, 0.6);
+}
+
+.banner-good {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.4), rgba(15, 23, 42, 0.9));
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 40rpx rgba(56, 189, 248, 0.3);
+}
+
+.banner-evil {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.4), rgba(15, 23, 42, 0.9));
+  border: 2px solid #f87171;
+  box-shadow: 0 0 40rpx rgba(248, 113, 113, 0.3);
+}
+
+.trophy-icon { font-size: 80rpx; margin-bottom: 12rpx; }
+.winner-title { font-size: 48rpx; font-weight: 900; color: #f8fafc; letter-spacing: 2rpx; }
+.winner-summary { font-size: 26rpx; color: #cbd5e1; margin-top: 10rpx; }
+
+.exiled-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+
+.exiled-tag {
+  background: rgba(220, 38, 38, 0.2);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  color: #f87171;
+  font-size: 26rpx;
+  font-weight: 700;
+  padding: 6rpx 20rpx;
+  border-radius: 999rpx;
+}
+
+.final-roles-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.final-role-card {
+  background: rgba(10, 15, 26, 0.6);
+  border-radius: 14rpx;
+  padding: 14rpx 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.final-player-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.role-shift-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.old-role {
+  font-size: 24rpx;
+  color: #64748b;
+  text-decoration: line-through;
+}
+
+.shift-arrow { font-size: 22rpx; }
+
+.new-role {
+  font-size: 28rpx;
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+.timeline-scroll {
+  max-height: 360rpx;
+  background: rgba(10, 15, 26, 0.6);
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  margin-top: 14rpx;
+  box-sizing: border-box;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 10rpx;
+  margin-bottom: 12rpx;
+}
+
+.timeline-dot { color: #38bdf8; font-weight: bold; }
+.timeline-text { font-size: 24rpx; color: #cbd5e1; line-height: 1.5; }
+
+.secondary-btn {
+  background: rgba(100, 116, 139, 0.3) !important;
+  color: #f8fafc !important;
+}
+
+/* 三国杀特殊公开标识 */
+.lord-public-alert {
+  background: rgba(245, 158, 11, 0.2);
+  border: 2px solid #f59e0b;
+  border-radius: 16rpx;
+  padding: 12rpx 24rpx;
+  color: #fbbf24;
+  font-size: 28rpx;
+  font-weight: 800;
+  margin-bottom: 24rpx;
+  text-align: center;
+  animation: pulse 2s infinite;
+}
+
+/* ================== 角色图鉴弹窗 (抽屉风格) ================== */
 .guide-modal {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   z-index: 1000;
-  padding: 40rpx;
 }
 
 .guide-panel {
-  background: #0F131C;
-  border-radius: 24rpx;
+  background: #0f172a;
+  border-radius: 36rpx 36rpx 0 0;
   width: 100%;
-  max-width: 680rpx;
-  max-height: 85vh;
+  max-width: 800rpx;
+  max-height: 82vh;
+  max-height: 82dvh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.4);
+  box-shadow: 0 -10rpx 40rpx rgba(0, 0, 0, 0.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  box-sizing: border-box;
+  padding-bottom: calc(20rpx + var(--sab, 0px));
 }
 
 .guide-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 32rpx 36rpx;
-  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 28rpx 36rpx;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .guide-title {
-  font-size: 40rpx;
-  font-weight: bold;
-  background: linear-gradient(135deg, #38BDF8 0%, #6EE7B7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #f8fafc;
 }
 
 .guide-close {
-  font-size: 48rpx;
-  color: #9CA3AF;
-  width: 60rpx;
-  height: 60rpx;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #94a3b8;
+  font-size: 26rpx;
+}
+
+.my-role-container {
+  padding: 20rpx 28rpx 0 28rpx;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.role-card {
+  background: rgba(30, 41, 59, 0.7);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-sizing: border-box;
+}
+
+.my-role {
+  background: rgba(30, 58, 138, 0.25);
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 24rpx rgba(56, 189, 248, 0.25);
+}
+
+.role-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+  gap: 16rpx;
+}
+
+.role-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.role-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.role-name {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.role-camp {
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.my-role-badge {
+  background: #38bdf8;
+  color: #0f172a;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 800;
+}
+
+.role-desc {
+  font-size: 24rpx;
+  color: #94a3b8;
+  line-height: 1.5;
+  display: block;
+}
+
+.role-tip {
+  background: rgba(56, 189, 248, 0.1);
+  border-left: 3px solid #38bdf8;
+  padding: 14rpx;
+  border-radius: 8rpx;
+  margin-top: 12rpx;
+}
+
+.tip-label {
+  font-size: 22rpx;
+  color: #38bdf8;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.tip-content {
+  font-size: 22rpx;
+  color: #e2e8f0;
+  line-height: 1.5;
+  display: block;
 }
 
 .guide-content {
   flex: 1;
-  padding: 24rpx;
+  padding: 16rpx 28rpx;
   overflow-y: auto;
   min-height: 0;
   box-sizing: border-box;
-  width: 100%;
 }
 
+.section-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+/* ================== 雪碧图通用样式 ================== */
 .role-sprite {
-  width: 96rpx;
-  height: 96rpx;
+  width: 80rpx;
+  height: 80rpx;
   border-radius: 12rpx;
-  background-size: 400% 400%;
   flex-shrink: 0;
 }
 
@@ -1515,124 +3254,29 @@ const submitVote = (targetseatNumber) => {
 .avalon-sprite {
   background-image: url('/static/avalon-sprite.jpg');
   background-size: 448.72% 386.72%;
-  flex-shrink: 0;
 }
+
 .sgs-sprite {
   background-image: url('/static/sgs-sprite.png');
   background-size: 200% 200%;
 }
+
 .sgs-back {
   background-image: url('/static/sgs-back.png');
   background-size: cover;
   background-position: center;
   width: 100%;
   height: 100%;
-  border-radius: 20rpx;
-  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.5);
 }
 
-
-.role-card {
-  background: #161D2B;
-  border-radius: 16rpx;
-  padding: 28rpx;
-  margin-bottom: 20rpx;
-  border: 1px solid rgba(229, 231, 235, 0.1);
-  box-sizing: border-box;
-}
-
-.my-role {
-  background: #1E2636;
-  border: 2px solid #38BDF8;
-  box-shadow: 0 0 24rpx rgba(56, 189, 248, 0.3);
-  margin-bottom: 12rpx;
-}
-
-.role-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20rpx;
-  gap: 16rpx;
-}
-
-.role-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6rpx;
-}
-
-.role-name {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #E5E7EB;
-}
-
-.role-camp {
-  font-size: 24rpx;
-  font-weight: 500;
-}
-
-.my-role-badge {
-  background: #38BDF8;
-  color: #0F131C;
-  padding: 8rpx 16rpx;
-  border-radius: 999rpx;
-  font-size: 22rpx;
-  font-weight: bold;
-}
-
-.role-desc {
-  font-size: 28rpx;
-  color: #9CA3AF;
-  line-height: 1.6;
-  margin-bottom: 20rpx;
-  display: block;
-}
-
-.role-tip {
-  background: rgba(56, 189, 248, 0.1);
-  border-left: 3px solid #38BDF8;
-  padding: 20rpx;
-  border-radius: 8rpx;
-}
-
-.tip-label {
-  font-size: 26rpx;
-  color: #38BDF8;
-  font-weight: bold;
-  display: block;
-  margin-bottom: 12rpx;
-}
-
-.tip-content {
-  font-size: 26rpx;
-  color: #E5E7EB;
-  line-height: 1.7;
-  display: block;
-}
-
-.roles-section {
-  margin-top: 20rpx;
-}
-
-.section-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #E5E7EB;
-  margin-bottom: 24rpx;
-  display: block;
-  padding-left: 8rpx;
-}
-
+/* ================== 断网重连遮罩 ================== */
 .disconnect-mask {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.88);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1640,102 +3284,34 @@ const submitVote = (targetseatNumber) => {
 }
 
 .disconnect-panel {
-  background: #fff;
-  padding: 60rpx 40rpx;
-  border-radius: 20rpx;
+  background: #1e293b;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  padding: 50rpx 40rpx;
+  border-radius: 28rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.5);
+  box-shadow: 0 20rpx 50rpx rgba(0,0,0,0.6);
   animation: pulse 2s infinite;
 }
 
+.disconnect-icon { font-size: 72rpx; }
+.disconnect-title { font-size: 32rpx; font-weight: 800; color: #f87171; margin-top: 16rpx; }
+.disconnect-sub { font-size: 24rpx; color: #94a3b8; margin-top: 8rpx; }
+
+/* 关键帧动画 */
 @keyframes pulse {
-  0% { transform: scale(0.95); opacity: 0.9; }
-  50% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.9; }
+  0% { transform: scale(0.96); opacity: 0.85; }
+  50% { transform: scale(1.02); opacity: 1; }
+  100% { transform: scale(0.96); opacity: 0.85; }
 }
 
-.flip-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  perspective: 1000px;
-  width: 100%;
-  margin-top: 20rpx;
-  min-height: 450rpx;
+/* Vue Transition */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
-.flipper {
-  width: 320rpx;
-  height: 448rpx;
-  position: relative;
-  transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
-  transform-style: preserve-3d;
-  margin: 0;
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
 }
-.flipper.is-flipped {
-  transform: rotateY(180deg);
-}
-.front, .back {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  backface-visibility: hidden;
-  border-radius: 20rpx;
-  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.5);
-}
-.front {
-  z-index: 2;
-  transform: rotateY(0deg);
-  cursor: pointer;
-}
-.back {
-  transform: rotateY(180deg);
-}
-.card-back-design {
-  background: radial-gradient(circle at center, #2c3e50 0%, #1a252f 100%);
-  border: 12rpx solid #34495e;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: inset 0 0 20rpx rgba(0,0,0,0.8), 0 10rpx 30rpx rgba(0,0,0,0.5);
-}
-.card-back-inner {
-  width: 70%;
-  height: 70%;
-  border: 4rpx solid #5d6d7e;
-  border-radius: 12rpx;
-  background: repeating-linear-gradient(
-    45deg,
-    #2c3e50,
-    #2c3e50 10px,
-    #34495e 10px,
-    #34495e 20px
-  );
-  opacity: 0.8;
-  animation: pulse 3s infinite ease-in-out;
-}
-@keyframes pulse {
-  0% { transform: scale(0.95); opacity: 0.6; }
-  50% { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.6; }
-}
-.role-info-side {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-left: 40rpx;
-  animation: fadeIn 0.6s ease forwards;
-}
-@keyframes fadeIn {
-  0% { opacity: 0; transform: translateX(-20rpx); }
-  100% { opacity: 1; transform: translateX(0); }
-}
-.card-name { color: #2c3e50; font-size: 56rpx; font-weight: bold; margin-bottom: 10rpx; }
-.player-info { color: #666; font-size: 32rpx; margin-bottom: 30rpx; font-weight: bold; }
-
 </style>

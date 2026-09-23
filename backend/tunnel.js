@@ -10,15 +10,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
 const PORT = process.env.PORT || 3000;
-const CLOUDFLARED = path.join(ROOT, 'cloudflared.exe');
+let CLOUDFLARED = path.join(ROOT, process.platform === 'win32' ? 'cloudflared.exe' : 'cloudflared');
+if (!fs.existsSync(CLOUDFLARED)) {
+  CLOUDFLARED = 'cloudflared';
+}
 const LOG_FILE = path.join(ROOT, 'tunnel.log');
 const QR_PNG = path.join(ROOT, 'qrcode.png');
 const QR_HTML = path.join(ROOT, 'qrcode.html');
-
-if (!fs.existsSync(CLOUDFLARED)) {
-  console.error(`找不到 cloudflared: ${CLOUDFLARED}`);
-  process.exit(1);
-}
 
 // 本机网络对 UDP/QUIC 支持不稳定（会出现 "no recent network activity" 反复重连），
 // 所以强制走 http2 + IPv4 边缘节点。回源用 127.0.0.1 避免 IPv6 解析问题。
@@ -84,6 +82,11 @@ async function writeQrcode(url, reachable) {
     margin: 1,
     color: { dark: '#1e3a8a', light: '#ffffff' },
   });
+
+  try {
+    const qrTerminal = await QRCode.toString(url, { type: 'terminal', small: true });
+    console.log('\n' + qrTerminal + '\n');
+  } catch (e) {}
 
   const dataUrl = await QRCode.toDataURL(url, {
     width: 560,

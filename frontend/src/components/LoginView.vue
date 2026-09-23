@@ -7,34 +7,41 @@
     <!-- 主卡片（暗黑毛玻璃） -->
     <view class="glass-card">
       <view class="title-container">
-        <text class="gradient-title">阵营对抗</text>
-        <text class="sub-title">桌游聚会辅助终端</text>
+        <view class="title-icon-badge">🐺 ⚔️ 🗡️</view>
+        <text class="gradient-title">聚会桌游终端</text>
+        <text class="sub-title">一夜终极狼人 · 阿瓦隆 · 三国杀</text>
       </view>
 
       <view class="form-container">
         <!-- 昵称输入框 -->
         <view class="input-group">
-          <input 
-            class="neumorphic-input" 
-            :value="nickname" 
-            @input="$emit('update:nickname', $event.detail.value)"
-            placeholder="输入您的昵称" 
-            placeholder-class="placeholder-text"
-          />
-          <view class="random-btn" @click="generateRandomNickname">🎲</view>
+          <text class="input-label">玩家昵称</text>
+          <view class="input-control">
+            <input 
+              class="neumorphic-input" 
+              :value="nickname" 
+              @input="$emit('update:nickname', $event.detail.value)"
+              placeholder="输入您的昵称" 
+              placeholder-class="placeholder-text"
+            />
+            <view class="random-btn" :class="{ 'dice-roll': isRolling }" @click="generateRandomNickname">🎲</view>
+          </view>
         </view>
 
         <!-- 房间号输入区 -->
-        <view class="input-group mt-4">
-          <input 
-            class="neumorphic-input room-input" 
-            :value="roomId" 
-            @input="$emit('update:roomId', $event.detail.value)"
-            placeholder="输入 4 位房间号" 
-            placeholder-class="placeholder-text"
-            type="number" 
-            maxlength="4" 
-          />
+        <view class="input-group">
+          <text class="input-label">房间号</text>
+          <view class="input-control">
+            <input 
+              class="neumorphic-input room-input" 
+              :value="roomId" 
+              @input="$emit('update:roomId', $event.detail.value)"
+              placeholder="4 位房间号" 
+              placeholder-class="placeholder-text"
+              type="number" 
+              maxlength="4" 
+            />
+          </view>
         </view>
 
         <!-- 按钮拆分 -->
@@ -60,7 +67,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
   nickname: { type: String, default: '' },
@@ -69,6 +76,8 @@ const props = defineProps({
 
 const emit = defineEmits(['update:nickname', 'update:roomId', 'join']);
 
+const isRolling = ref(false);
+
 const NICKNAME_POOL = [
   "迷茫的预言家", "机智的村民", "背锅的强盗", "心虚的狼人", 
   "盲狙的刺客", "深情的梅林", "划水的爪牙", "暴躁的皮匠",
@@ -76,6 +85,8 @@ const NICKNAME_POOL = [
 ];
 
 const generateRandomNickname = () => {
+  isRolling.value = true;
+  setTimeout(() => { isRolling.value = false; }, 400);
   const randomName = NICKNAME_POOL[Math.floor(Math.random() * NICKNAME_POOL.length)];
   emit('update:nickname', randomName);
 };
@@ -114,123 +125,138 @@ const handleCreate = () => {
 </script>
 
 <style scoped>
-/* 容器：深色红蓝渐变 */
+/* 容器：深色红蓝渐变，支持移动端自适应与键盘滚动 */
 .login-wrapper {
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
   width: 100vw;
-  height: 100vh;
   z-index: 100;
-  background: linear-gradient(135deg, #172554 0%, #0f172a 50%, #450a0a 100%);
-  overflow: hidden;
+  background: radial-gradient(circle at 10% 20%, #1e1b4b 0%, #090d16 60%, #31101e 100%);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 40rpx;
+  padding: calc(40rpx + var(--sat, 0px)) 36rpx calc(40rpx + var(--sab, 0px)) 36rpx;
   box-sizing: border-box;
 }
 
 /* 阵营能量场（模糊光源） */
 .energy-field {
   position: absolute;
-  width: 700rpx;
-  height: 700rpx;
+  width: 600rpx;
+  height: 600rpx;
   border-radius: 50%;
-  filter: blur(120px);
-  -webkit-filter: blur(120px);
+  filter: blur(100px);
+  -webkit-filter: blur(100px);
   z-index: 0;
-  animation: pulse-glow 6s ease-in-out infinite alternate;
+  pointer-events: none;
+  animation: pulse-glow 7s ease-in-out infinite alternate;
 }
 
 .good-glow {
-  background: rgba(37, 99, 235, 0.4);
-  top: -100rpx;
-  left: -200rpx;
+  background: rgba(37, 99, 235, 0.35);
+  top: -60rpx;
+  left: -120rpx;
 }
 
 .evil-glow {
-  background: rgba(220, 38, 38, 0.3);
-  bottom: -100rpx;
-  right: -200rpx;
-  animation-delay: -3s;
+  background: rgba(220, 38, 38, 0.28);
+  bottom: -60rpx;
+  right: -120rpx;
+  animation-delay: -3.5s;
 }
 
 @keyframes pulse-glow {
-  0% { transform: scale(0.8); opacity: 0.7; }
-  100% { transform: scale(1.2); opacity: 1; }
+  0% { transform: scale(0.85) translate(0, 0); opacity: 0.6; }
+  100% { transform: scale(1.15) translate(20rpx, 20rpx); opacity: 0.95; }
 }
 
 /* 主卡片（暗黑毛玻璃） */
 .glass-card {
   position: relative;
   z-index: 10;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-radius: 48rpx;
-  box-shadow: 0 50rpx 100rpx rgba(0, 0, 0, 0.5);
-  padding: 60rpx 40rpx;
+  background: rgba(18, 24, 38, 0.75);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-radius: 40rpx;
+  box-shadow: 0 40rpx 80rpx -10rpx rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  padding: 56rpx 40rpx;
   width: 100%;
-  max-width: 800rpx;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  border-left: 2px solid rgba(59, 130, 246, 0.3);
-  border-right: 2px solid rgba(239, 68, 68, 0.3);
+  max-width: 680rpx;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
 }
 
 .title-container {
   text-align: center;
-  margin-bottom: 60rpx;
+  margin-bottom: 50rpx;
 }
 
 .gradient-title {
-  font-size: 64rpx;
+  font-size: 58rpx;
   font-weight: 900;
-  background-image: linear-gradient(to right, #60a5fa, #f87171);
+  background-image: linear-gradient(135deg, #60a5fa 0%, #c084fc 50%, #f87171 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
   display: block;
   letter-spacing: 4rpx;
-  text-shadow: 0 10rpx 20rpx rgba(0,0,0,0.3);
+  text-shadow: 0 10rpx 24rpx rgba(0,0,0,0.5);
 }
 
 .sub-title {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: #94a3b8;
-  margin-top: 10rpx;
+  margin-top: 12rpx;
   display: block;
-  letter-spacing: 2rpx;
+  letter-spacing: 3rpx;
 }
 
 /* 输入框组合 */
 .input-group {
+  margin-bottom: 34rpx;
+}
+
+.input-label {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 12rpx;
+  letter-spacing: 1rpx;
+}
+
+.input-control {
   position: relative;
-  margin-bottom: 40rpx;
+  display: flex;
+  align-items: center;
 }
 
 .neumorphic-input {
   width: 100%;
-  height: 100rpx;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24rpx;
-  padding: 0 40rpx;
+  height: 96rpx;
+  background: rgba(10, 15, 26, 0.65);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20rpx;
+  padding: 0 32rpx;
   color: #ffffff;
-  font-size: 32rpx;
+  font-size: 30rpx;
   box-sizing: border-box;
-  transition: all 0.3s;
+  transition: all 0.25s ease;
 }
 
 .neumorphic-input:focus {
-  border-color: rgba(96, 165, 250, 0.5);
-  box-shadow: 0 0 0 4rpx rgba(96, 165, 250, 0.1);
+  border-color: #60a5fa;
+  background: rgba(15, 23, 42, 0.85);
+  box-shadow: 0 0 0 6rpx rgba(96, 165, 250, 0.2);
 }
 
 .room-input {
-  font-size: 44rpx;
+  font-size: 40rpx;
   text-align: center;
-  letter-spacing: 16rpx;
+  letter-spacing: 20rpx;
   font-weight: bold;
 }
 
@@ -243,61 +269,89 @@ const handleCreate = () => {
 
 .random-btn {
   position: absolute;
-  right: 20rpx;
+  right: 16rpx;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 44rpx;
-  padding: 10rpx;
+  font-size: 42rpx;
+  padding: 12rpx;
   z-index: 20;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.random-btn:active {
+  transform: translateY(-50%) scale(0.85);
+}
+
+.dice-roll {
+  animation: diceSpin 0.4s ease;
+}
+
+@keyframes diceSpin {
+  0% { transform: translateY(-50%) rotate(0deg) scale(1); }
+  50% { transform: translateY(-50%) rotate(180deg) scale(1.3); }
+  100% { transform: translateY(-50%) rotate(360deg) scale(1); }
 }
 
 /* 按钮组 */
 .actions-container {
-  margin-top: 60rpx;
+  margin-top: 50rpx;
   display: flex;
   flex-direction: column;
-  gap: 30rpx;
+  gap: 24rpx;
+}
+
+.title-icon-badge {
+  font-size: 40rpx;
+  margin-bottom: 12rpx;
+  filter: drop-shadow(0 4rpx 10rpx rgba(0, 0, 0, 0.5));
 }
 
 .btn-primary {
   width: 100%;
   height: 100rpx;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #ffd700 0%, #f59e0b 50%, #d97706 100%);
   border-radius: 24rpx;
-  color: white;
-  font-size: 34rpx;
-  font-weight: bold;
+  color: #451a03;
+  font-size: 32rpx;
+  font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10rpx 30rpx rgba(59, 130, 246, 0.4);
-  transition: opacity 0.3s;
+  box-shadow: 0 12rpx 36rpx rgba(245, 158, 11, 0.4), inset 0 2rpx 0 rgba(255, 255, 255, 0.5);
+  border: none;
+  transition: all 0.2s ease;
+  letter-spacing: 2rpx;
 }
 
 .btn-primary::after { border: none; }
-.btn-primary:active { opacity: 0.8; }
+.btn-primary:active {
+  transform: translateY(2rpx) scale(0.98);
+}
 
 .btn-ghost {
   width: 100%;
-  height: 100rpx;
-  background: transparent;
-  border: 2rpx solid rgba(239, 68, 68, 0.5);
+  height: 96rpx;
+  background: rgba(30, 41, 59, 0.65);
+  border: 1.5px solid rgba(245, 158, 11, 0.4);
   border-radius: 24rpx;
-  color: #f87171;
-  font-size: 32rpx;
-  font-weight: bold;
+  color: #fbbf24;
+  font-size: 30rpx;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s;
+  transition: all 0.2s ease;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.4);
 }
 
 .btn-ghost::after { border: none; }
 .btn-ghost:active {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(245, 158, 11, 0.15);
+  transform: translateY(2rpx) scale(0.98);
 }
 
 .opacity-50 {
-  opacity: 0.5 !important;
+  opacity: 0.45 !important;
 }
 </style>
