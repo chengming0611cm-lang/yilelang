@@ -441,7 +441,7 @@
         <!-- 返回大厅按钮 -->
         <view class="mt-4 mb-6">
           <button v-if="isHost" class="confirm-btn" @click="forceReturnLobby">返回大厅并开启下一局</button>
-          <button v-else class="confirm-btn secondary-btn" @click="appState = 'WAITING'">返回大厅准备下一局</button>
+          <button v-else class="confirm-btn" @click="appState = 'WAITING'">返回大厅准备下一局</button>
         </view>
       </view>
 
