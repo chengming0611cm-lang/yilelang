@@ -627,13 +627,16 @@
 
               <!-- 确认操作与放弃行动按钮 -->
               <view class="action-footer-btns">
-                <view v-if="['werewolf', 'minion', 'mason', 'insomniac'].includes(myInitialRole) || (myInitialRole==='werewolf' && nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0)">
-                  <button class="confirm-btn" hover-class="confirm-btn-hover" @click.stop="submitNightAction({ type: 'CONFIRM' })">确认完毕</button>
+                  <view v-if="['werewolf', 'minion', 'mason', 'insomniac'].includes(myInitialRole) || (myInitialRole==='werewolf' && nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0)">
+                    <button class="confirm-btn" hover-class="confirm-btn-hover" @click.stop="submitNightAction({ type: 'CONFIRM' })">确认完毕</button>
+                  </view>
+                  <view v-else-if="myInitialRole === 'drunk'" style="text-align: center; padding: 20rpx 0;">
+                    <text style="color: #ef4444; font-size: 26rpx; font-weight: bold;">(注：酒鬼必须盲换一张牌，不可跳过)</text>
+                  </view>
+                  <view v-else>
+                    <button class="pass-btn" hover-class="pass-btn-hover" @click.stop="submitNightAction({ type: 'NONE' })">不发动技能 (跳过)</button>
+                  </view>
                 </view>
-                <view v-else>
-                  <button class="pass-btn" hover-class="pass-btn-hover" @click.stop="submitNightAction({ type: 'NONE' })">不发动技能 (跳过)</button>
-                </view>
-              </view>
             </view>
             
             <!-- 等待他人行动状态 -->
