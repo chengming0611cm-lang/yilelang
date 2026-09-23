@@ -1,5 +1,6 @@
 <template>
   <view class="container">
+    <CustomModal ref="globalModal" />
     <!-- 全局断网重连遮罩 -->
     <view v-if="isDisconnected" class="disconnect-mask">
       <view class="disconnect-panel">
@@ -530,9 +531,9 @@
                 </view>
                 <view v-else>
                   <text class="action-instruction">选择查看一名玩家底牌：</text>
-                  <picker class="picker-box" mode="selector" :range="otherPlayers" range-key="displayName" @change="onSeerPlayerChange">
+                  <view class="picker-box" hover-class="action-btn-hover" @click="openPlayerPicker('选择目标玩家', (p) => submitNightAction({ type: 'SEER_PLAYER', targetSeat: p.seatNumber }))">
                     <view class="picker-inner">🔍 点击选择目标玩家</view>
-                  </picker>
+                  </view>
                   
                   <text class="divider-text">— 或者选择查看中央两张底牌 —</text>
                   <view class="center-cards-row">
@@ -551,9 +552,9 @@
                 </view>
                 <view v-else>
                   <text class="action-instruction">选择一名玩家抢夺底牌：</text>
-                  <picker class="picker-box" mode="selector" :range="otherPlayers" range-key="displayName" @change="onRobPlayerChange">
+                  <view class="picker-box" hover-class="action-btn-hover" @click="openPlayerPicker('选择抢夺目标', (p) => submitNightAction({ type: 'ROB_PLAYER', targetSeat: p.seatNumber }))">
                     <view class="picker-inner">🗡️ 点击选择抢夺目标</view>
-                  </picker>
+                  </view>
                 </view>
               </view>
 
@@ -564,12 +565,12 @@
                 </view>
                 <view v-else>
                   <text class="action-instruction">选择两名其他玩家交换身份：</text>
-                  <picker class="picker-box" mode="selector" :range="otherPlayers" range-key="displayName" @change="(e) => tmP1 = otherPlayers[e.detail.value]">
-                    <view class="picker-inner">玩家 1: {{ tmP1 ? tmP1.displayName : '未选择' }}</view>
-                  </picker>
-                  <picker class="picker-box mt-2" mode="selector" :range="otherPlayers" range-key="displayName" @change="(e) => tmP2 = otherPlayers[e.detail.value]">
-                    <view class="picker-inner">玩家 2: {{ tmP2 ? tmP2.displayName : '未选择' }}</view>
-                  </picker>
+                  <view class="picker-box" hover-class="action-btn-hover" @click="openPlayerPicker('选择玩家1', (p) => { tmP1 = p })">
+                      <view class="picker-inner">玩家 1: {{ tmP1 ? tmP1.displayName : '未选择' }}</view>
+                    </view>
+                  <view class="picker-box mt-2" hover-class="action-btn-hover" @click="openPlayerPicker('选择玩家2', (p) => { tmP2 = p })">
+                      <view class="picker-inner">玩家 2: {{ tmP2 ? tmP2.displayName : '未选择' }}</view>
+                    </view>
                   <button class="confirm-btn mt-3" hover-class="confirm-btn-hover" @click="doTroublemaker">确认调换身份</button>
                 </view>
               </view>
@@ -771,6 +772,7 @@ import io from '@hyoga/uni-socket.io';
 import { ROLES_DICTIONARY, CAMP_COLORS, AVALON_ROLES_DICTIONARY } from '../../rolesDictionary.js';
 import AvalonGameView from '../../components/AvalonGameView.vue';
 import ShareQrcodeModal from '../../components/ShareQrcodeModal.vue';
+  import CustomModal from '../../components/CustomModal.vue';
 import LoginView from '../../components/LoginView.vue';
 import PlayerAvatar from '../../components/PlayerAvatar.vue';
 
@@ -870,6 +872,7 @@ const isMyTurn = ref(false);
 const nightViewData = ref({});
 const gameResult = ref(null);
 const isDisconnected = ref(false);
+  const globalModal = ref(null);
 
 const avalonState = ref({
   phase: 'waiting',
@@ -1286,11 +1289,7 @@ const joinRoom = (isAuto = false) => {
   });
 
   socket.on('game_aborted', (data) => {
-    uni.showModal({
-      title: '游戏已中止',
-      content: data.reason,
-      showCancel: false
-    });
+    globalModal.value.show({ title: '游戏已中断', content: data.reason, type: 'alert' });
     appState.value = 'WAITING';
   });
 
@@ -1392,11 +1391,13 @@ const startGame = () => {
 };
 
 const leaveRoom = () => {
-  uni.showModal({
-    title: '退出房间',
-    content: '中途退出将导致当前游戏异常，确认退出吗?',
-    success: (res) => {
+  globalModal.value.show({
+      title: '退出房间',
+      content: '中途退出将导致当前游戏异常，确认退出吗?',
+      type: 'confirm'
+    }).then(res => {
       if (res.confirm) {
+
         socket.emit('leave_room', { sessionId: sessionId.value, roomId: roomId.value });
         appState.value = 'LOBBY';
           votingCountdown.value = null;
@@ -1404,25 +1405,39 @@ const leaveRoom = () => {
         roomId.value = '';
         uni.removeStorageSync('werewolf_roomId');
       }
-    }
-  });
+    });
 };
 
 const forceReturnLobby = () => {
-  uni.showModal({
-    title: '强制重开',
-    content: '确认强制结束当前对局，带领全员返回大厅吗?',
-    success: (res) => {
+  globalModal.value.show({
+      title: '强制重开',
+      content: '确认强制结束当前对局，带领全员返回大厅吗?',
+      type: 'confirm'
+    }).then(res => {
       if (res.confirm) {
+
         socket.emit('force_return_lobby', { sessionId: sessionId.value, roomId: roomId.value });
       }
-    }
-  });
+    });
 };
 
 // --- 夜间行动具体逻辑 ---
 
-const onSeerPlayerChange = (e) => {
+
+  const openPlayerPicker = (title, onSelectCb) => {
+    const opts = otherPlayers.value.map(p => ({ label: `[${p.seatNumber}号] ${p.nickname}`, value: p }));
+    globalModal.value.show({
+      title,
+      type: 'select',
+      options: opts
+    }).then(res => {
+      if (res.confirm) {
+        onSelectCb(res.value);
+      }
+    });
+  };
+
+  const onSeerPlayerChange = (e) => {
   const target = otherPlayers.value[e.detail.value];
   submitNightAction({ type: 'SEER_PLAYER', targetSeat: target.seatNumber });
 };
@@ -1458,11 +1473,11 @@ const submitNightAction = (actionData) => {
       isMyTurn.value = false;
       
       if (res.seenRole) {
-        uni.showModal({ title: '查看结果', content: `你看到的底牌是：${ROLE_NAMES[res.seenRole]}`, showCancel: false });
+        globalModal.value.show({ title: '查看结果', content: `你看到的底牌是：${ROLE_NAMES[res.seenRole]}`, type: 'alert' });
       } else if (res.seenRoles) {
-        uni.showModal({ title: '查看结果', content: `你看到中央的两张牌是：${ROLE_NAMES[res.seenRoles[0]]} 和 ${ROLE_NAMES[res.seenRoles[1]]}`, showCancel: false });
+        globalModal.value.show({ title: '查看结果', content: `你看到中央的两张牌是：${ROLE_NAMES[res.seenRoles[0]]} 和 ${ROLE_NAMES[res.seenRoles[1]]}`, type: 'alert' });
       } else if (res.newRole) {
-        uni.showModal({ title: '抢夺成功', content: `你换回的新底牌是：${ROLE_NAMES[res.newRole] || '未知'}`, showCancel: false });
+        globalModal.value.show({ title: '抢夺成功', content: `你换回的新底牌是：${ROLE_NAMES[res.newRole] || '未知'}`, type: 'alert' });
       } else {
         uni.showToast({ title: '操作已提交', icon: 'success' });
       }
