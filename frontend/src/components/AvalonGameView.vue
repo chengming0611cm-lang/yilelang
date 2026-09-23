@@ -321,12 +321,10 @@
         <view class="avalon-modal-header">
           <text class="avalon-modal-title">你的底牌</text>
         </view>
+        
         <view class="avalon-modal-body">
-          <view class="role-card-3d" :class="isGoodRole ? 'glow-good' : 'glow-evil'" style="margin: 0 auto; transform: scale(1.1);">
+          <view class="modal-role-card-container" :class="isGoodRole ? 'glow-good' : 'glow-evil'">
             <view class="role-sprite-large avalon-sprite" :style="{'background-position': AVALON_ROLES_DICTIONARY[avalonState.role]?.spritePosition}"></view>
-            <view class="card-name-overlay">
-              <text class="card-overlay-title">{{ getRoleName(avalonState.role) }}</text>
-            </view>
           </view>
         </view>
         <view class="avalon-modal-footer">
@@ -506,6 +504,18 @@ watch(() => props.avalonState.voteResult, (newResult) => {
 </script>
 
 <style scoped>
+
+.modal-role-card-container {
+  width: 360rpx;
+  height: 504rpx; /* 1:1.4 ratio */
+  margin: 20rpx auto;
+  border-radius: 24rpx;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 15rpx 40rpx rgba(0, 0, 0, 0.6);
+  border: 2rpx solid rgba(255, 255, 255, 0.1);
+}
+
 
 /* 查看底牌按钮 */
 .header-right-actions {
