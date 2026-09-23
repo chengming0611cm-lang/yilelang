@@ -189,6 +189,15 @@ io.on('connection', (socket) => {
       }
     }
   });
+  
+  // 7. 房主开启投票倒计时
+  socket.on('start_voting_countdown', (data) => {
+    const { sessionId, roomId } = data;
+    const room = RoomManager.getRoom(roomId);
+    if (room && room.hostId === sessionId) {
+      room.forceAction('start_voting_countdown', io);
+    }
+  });
 
   // 7. 提交投票
   socket.on('submit_vote', (data) => {

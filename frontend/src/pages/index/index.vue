@@ -659,13 +659,23 @@
           </view>
         </view>
 
-        <!-- ==================== VOTING (投票阶段) ==================== -->
+                <!-- ==================== VOTING (投票阶段) ==================== -->
         <view v-else-if="appState === 'VOTING'" class="voting-wrapper">
           <view class="voting-header">
             <text class="voting-title">🗳️ 全员投票放逐</text>
             <text class="voting-sub">选择你认为最可疑的玩家进行放逐，也可弃权</text>
           </view>
           
+          <view v-if="votingCountdown === null && isHost" style="margin-bottom: 30rpx; width: 100%;">
+            <button class="confirm-btn" @click="startVotingCountdown" style="width: 100%; border-radius: 12rpx; background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: bold; border: none;">▶️ 房主开启投票 (30s倒计时)</button>
+          </view>
+          <view v-else-if="votingCountdown !== null" style="margin-bottom: 30rpx; text-align: center;">
+            <text style="font-size: 40rpx; color: #ef4444; font-weight: 900;">⏳ 距离投票结束还有：{{ votingCountdown }}s</text>
+          </view>
+          <view v-else style="margin-bottom: 30rpx; text-align: center;">
+            <text style="font-size: 30rpx; color: #94a3b8;">等待房主开启投票...</text>
+          </view>
+
           <view class="voting-grid">
             <view 
               class="vote-player-item" 
@@ -675,15 +685,28 @@
                 <view class="vote-seat-badge">{{ p.seatNumber }}</view>
                 <text class="vote-player-name">{{ p.nickname }}</text>
               </view>
-              <button class="vote-action-btn" hover-class="action-btn-hover" @click="submitVote(p.seatNumber)">投TA</button>
+              <button 
+                class="vote-action-btn" 
+                :class="{'voted-active': selectedVote === p.seatNumber}"
+                hover-class="action-btn-hover" 
+                @click="submitVote(p.seatNumber)"
+                :disabled="votingCountdown === null">
+                {{ selectedVote === p.seatNumber ? '已投TA' : '投TA' }}
+              </button>
             </view>
           </view>
 
-          <view class="bottom-action-container">
-            <button class="abstain-btn" @click="submitVote(-1)">🏳️ 放弃本次投票（弃权）</button>
+          <view class="bottom-action-container" style="margin-top: 40rpx; width: 100%; position: relative;">
+            <button 
+              class="abstain-btn" 
+              :class="{'abstain-active': selectedVote === -1}"
+              @click="submitVote(-1)"
+              :disabled="votingCountdown === null">
+              🏳️ {{ selectedVote === -1 ? '已选弃权' : '放弃本次投票（弃权）' }}
+            </button>
           </view>
         </view>
-      </template>
+        </template>
 
       <!-- SGS 游戏视图 -->
       <template v-else-if="gameType === 'sgs'">
@@ -780,6 +803,8 @@ const isHost = ref(false);
 const players = ref([]);
 const sortedPlayers = computed(() => [...players.value].sort((a, b) => a.seatNumber - b.seatNumber));
 const selectedRoles = ref([]);
+  const selectedVote = ref(null);
+  const votingCountdown = ref(null);
 
 const activeDictionary = computed(() => gameType.value === 'avalon' ? AVALON_ROLES_DICTIONARY : ROLES_DICTIONARY);
 const activeMyRole = computed(() => gameType.value === 'avalon' ? avalonState.value?.role : myInitialRole.value);
@@ -1368,6 +1393,8 @@ const leaveRoom = () => {
       if (res.confirm) {
         socket.emit('leave_room', { sessionId: sessionId.value, roomId: roomId.value });
         appState.value = 'LOBBY';
+          votingCountdown.value = null;
+          selectedVote.value = null;
         roomId.value = '';
         uni.removeStorageSync('werewolf_roomId');
       }
@@ -1443,14 +1470,21 @@ const forceVote = () => {
   socket.emit('force_vote', { sessionId: sessionId.value, roomId: roomId.value });
 };
 
-const submitVote = (targetseatNumber) => {
-  socket.emit('submit_vote', { 
-    sessionId: sessionId.value, 
-    roomId: roomId.value, 
-    voteTarget: targetseatNumber 
-  });
-  uni.showToast({ title: '投票已提交', icon: 'success' });
-};
+const startVotingCountdown = () => {
+    socket.emit('start_voting_countdown', { sessionId: sessionId.value, roomId: roomId.value });
+  };
+
+  const submitVote = (targetseatNumber) => {
+    if (votingCountdown.value === null) {
+      return uni.showToast({ title: '投票尚未开始', icon: 'none' });
+    }
+    selectedVote.value = targetseatNumber;
+    socket.emit('submit_vote', { 
+      sessionId: sessionId.value, 
+      roomId: roomId.value, 
+      voteTarget: targetseatNumber 
+    });
+  };
 </script>
 
 <style scoped>
@@ -2919,6 +2953,16 @@ const submitVote = (targetseatNumber) => {
   padding: 10rpx 28rpx;
   border: none;
   box-shadow: 0 4rpx 12rpx rgba(239, 68, 68, 0.4);
+  margin: 0; 
+}
+.voted-active {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.4) !important;
+}
+.abstain-active {
+  background: rgba(16, 185, 129, 0.3) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.5) !important;
 }
 
 .vote-action-btn::after { border: none; }
