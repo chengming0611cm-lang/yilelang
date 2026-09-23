@@ -13,6 +13,23 @@ export class Room {
     this.engine = null;
   }
 
+  transferHost(hostSessionId, targetSessionId) {
+    if (this.hostId !== hostSessionId) return false;
+    if (!this.players.has(targetSessionId)) return false;
+    this.hostId = targetSessionId;
+    return true;
+  }
+
+  kickPlayer(hostSessionId, targetSessionId) {
+    if (this.hostId !== hostSessionId) return false;
+    const target = this.players.get(targetSessionId);
+    if (!target) return false;
+    if (target.isReady) return false;
+
+    this.players.delete(targetSessionId);
+    return target.socketId;
+  }
+
   setGameType(type) {
     if (this.status !== 'WAITING') return false;
     this.gameType = type;
