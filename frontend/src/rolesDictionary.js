@@ -1,5 +1,34 @@
 // 角色图鉴数据字典
 export const ROLES_DICTIONARY = {
+
+  lord: {
+    name: '主公',
+    color: '#f1c40f',
+    camp: '主公阵营',
+    description: '消灭所有反贼和内奸，平定天下。主公身份开局全场公开。',
+    spritePosition: '0% 0%'
+  },
+  loyalist: {
+    name: '忠臣',
+    color: '#2ecc71',
+    camp: '主公阵营',
+    description: '保护主公，协助主公消灭反贼和内奸。',
+    spritePosition: '100% 0%'
+  },
+  rebel: {
+    name: '反贼',
+    color: '#e74c3c',
+    camp: '反贼阵营',
+    description: '推翻主公统治，击败主公即获得胜利。',
+    spritePosition: '0% 100%'
+  },
+  renegade: {
+    name: '内奸',
+    color: '#9b59b6',
+    camp: '内奸阵营',
+    description: '消灭除自己外所有人，最后击败主公。',
+    spritePosition: '100% 100%'
+  },
   werewolf: {
     name: '狼人',
     image: '/static/cards/werewolf.png',
@@ -133,7 +162,7 @@ export const CAMP_COLORS = {
 export const AVALON_ROLES_DICTIONARY = {
   merlin: {
     name: '梅林',
-    spritePosition: '0% 0%',
+    spritePosition: '4.04% 20.98%',
     color: '#f1c40f',
     camp: '正义阵营',
     description: '你看到了所有邪恶阵营的玩家（除莫德雷德外），但你要隐藏身份，不能被刺客发现。',
@@ -141,7 +170,7 @@ export const AVALON_ROLES_DICTIONARY = {
   },
   percival: {
     name: '派西维尔',
-    spritePosition: '33.333% 0%',
+    spritePosition: '34.74% 20.84%',
     color: '#3498db',
     camp: '正义阵营',
     description: '你看到了梅林和莫甘娜，但你不知道谁是真的梅林。',
@@ -149,7 +178,7 @@ export const AVALON_ROLES_DICTIONARY = {
   },
   loyal: {
     name: '亚瑟的忠臣',
-    spritePosition: '66.666% 0%',
+    spritePosition: '65.81% 20.84%',
     color: '#2ecc71',
     camp: '正义阵营',
     description: '你没有任何特殊视角，依靠推理找出邪恶阵营。',
@@ -157,7 +186,7 @@ export const AVALON_ROLES_DICTIONARY = {
   },
   morgana: {
     name: '莫甘娜',
-    spritePosition: '0% 33.333%',
+    spritePosition: '4.23% 96.96%',
     color: '#e74c3c',
     camp: '邪恶阵营',
     description: '你对派西维尔假扮梅林，试图迷惑他。',
@@ -165,7 +194,7 @@ export const AVALON_ROLES_DICTIONARY = {
   },
   assassin: {
     name: '刺客',
-    spritePosition: '33.333% 33.333%',
+    spritePosition: '35.11% 96.96%',
     color: '#8e44ad',
     camp: '邪恶阵营',
     description: '如果好人完成3次任务，你可以在最后指认梅林，指认正确则邪恶阵营反败为胜。',
@@ -173,7 +202,7 @@ export const AVALON_ROLES_DICTIONARY = {
   },
   oberon: {
     name: '奥伯伦',
-    spritePosition: '66.666% 33.333%',
+    spritePosition: '65.99% 96.82%',
     color: '#2c3e50',
     camp: '邪恶阵营',
     description: '你看不到其他邪恶阵营，其他邪恶阵营也看不到你。',
@@ -181,7 +210,7 @@ export const AVALON_ROLES_DICTIONARY = {
   },
   mordred: {
     name: '莫德雷德',
-    spritePosition: '0% 66.666%',
+    spritePosition: '96.69% 96.82%',
     color: '#c0392b',
     camp: '邪恶阵营',
     description: '梅林看不到你，你是隐藏最深的邪恶头目。',
@@ -189,7 +218,7 @@ export const AVALON_ROLES_DICTIONARY = {
   },
   minion_avalon: {
     name: '莫德雷德的爪牙',
-    spritePosition: '33.333% 66.666%',
+    spritePosition: '35.11% 96.96%',
     color: '#9b59b6',
     camp: '邪恶阵营',
     description: '你知道其他邪恶阵营的玩家（奥伯伦除外），一起破坏任务。',

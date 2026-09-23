@@ -28,7 +28,7 @@
           <!-- 卡牌正面（翻开后的内容） -->
           <view class="flip-card-back role-card-3d" :class="isGoodRole ? 'glow-good' : 'glow-evil'">
             <view class="role-sprite-large avalon-sprite" :style="{'background-position': AVALON_ROLES_DICTIONARY[avalonState.role]?.spritePosition}"></view>
-            <text class="card-name-overlay">{{ getRoleName(avalonState.role) }}</text>
+            
           </view>
         </view>
       </view>
@@ -514,7 +514,7 @@ watch(() => props.avalonState.voteResult, (newResult) => {
   width: 100%;
   height: 100%;
   background-image: url('/static/avalon-sprite.jpg');
-  background-size: 400% 365.5%; 
+  background-size: 448.72% 386.72%; 
   background-repeat: no-repeat;
   opacity: 0.95;
 }

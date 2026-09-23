@@ -131,24 +131,25 @@
           <radio-group @change="onGameTypeChange" style="display: flex; gap: 20rpx; margin-top: 10rpx;">
             <label><radio value="onuw" :checked="gameType === 'onuw'" /> 一夜终极狼人</label>
             <label><radio value="avalon" :checked="gameType === 'avalon'" /> 阿瓦隆</label>
+            <label><radio value="sgs" :checked="gameType === 'sgs'" /> 三国杀</label>
           </radio-group>
         </view>
 
         <!-- 一夜狼配置 -->
-        <view v-if="gameType === 'onuw'">
-          <text class="sub-title">设置板子 (当前已有 {{ players.length }} 人，实际需 {{ players.length + 3 }} 张牌)</text>
+        <view v-if="gameType === 'onuw' || gameType === 'sgs'">
+          <text class="sub-title">设置板子 (当前已有 {{ players.length }} 人，实际需 {{ gameType === 'sgs' ? players.length : players.length + 3 }} 张牌)</text>
           <text style="font-size: 28rpx; color: #e74c3c; font-weight: bold;">当前已选: {{ selectedRoles.length }} 张</text>
           
           <view class="recommend-box mt">
             <text class="sub-title" style="margin-bottom: 10rpx;">智能板子推荐:</text>
             <view style="display: flex; flex-wrap: wrap; gap: 10rpx;">
-              <button size="mini" type="default" v-for="n in 8" :key="n" @click="applyRecommend(n+2)">{{ n+2 }} 人局</button>
+              <button class="action-btn" hover-class="action-btn-hover" size="mini" type="default" v-for="n in 8" :key="n" @click="applyRecommend(n+2)">{{ n+2 }} 人局</button>
             </view>
           </view>
 
           <view class="roles-grid mt">
             <!-- 这里使用过滤后的 ONUW_ROLE_NAMES 避免混入阿瓦隆角色 -->
-            <view class="role-counter-item" v-for="(name, roleId) in ONUW_ROLE_NAMES" :key="roleId">
+            <view class="role-counter-item" v-for="(name, roleId) in (gameType === 'sgs' ? SGS_ROLE_NAMES : ONUW_ROLE_NAMES)" :key="roleId">
               <text class="role-name">{{ name }}</text>
               <view class="stepper">
                 <text class="step-btn" @click="changeRoleCount(roleId, -1)">-</text>
@@ -177,7 +178,7 @@
       </view>
       
       <view class="settings" v-else>
-        <text class="sub-title" style="font-weight: bold; color: #e67e22;">当前游戏：{{ gameType === 'onuw' ? '一夜终极狼人' : '阿瓦隆' }}</text>
+        <text class="sub-title" style="font-weight: bold; color: #e67e22;">当前游戏：{{ gameType === 'onuw' ? '一夜终极狼人' : gameType === 'avalon' ? '阿瓦隆' : '三国杀' }}</text>
         
         <button class="btn mt" :type="myReadyStatus ? 'default' : 'primary'" @click="toggleReady">
           {{ myReadyStatus ? '取消准备' : '准备' }}
@@ -269,9 +270,9 @@
             <view v-else>
               <text>你是孤狼。你可以查看中央的牌:</text>
               <view class="center-cards mt">
-                <button size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 0 })">查看左侧</button>
-                <button size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 1 })">查看中间</button>
-                <button size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 2 })">查看右侧</button>
+                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 0 })">查看左侧</button>
+                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 1 })">查看中间</button>
+                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 2 })">查看右侧</button>
               </view>
             </view>
           </view>
@@ -292,9 +293,9 @@
               </picker>
               <text style="margin: 20rpx 0; display: block;">或者</text>
               <view class="center-cards mt">
-                <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 1] })">看左+中</button>
-                <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [1, 2] })">看中+右</button>
-                <button size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 2] })">看左+右</button>
+                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 1] })">看左+中</button>
+                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [1, 2] })">看中+右</button>
+                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'SEER_CENTER', centerIndices: [0, 2] })">看左+右</button>
               </view>
             </view>
           </view>
@@ -325,7 +326,7 @@
               <picker class="picker-box mt" mode="selector" :range="otherPlayers" range-key="nickname" @change="(e) => tmP2 = otherPlayers[e.detail.value]">
                 <view>玩家2: {{ tmP2 ? tmP2.nickname : '未选择' }}</view>
               </picker>
-              <button class="btn mt" type="primary" size="mini" @click="doTroublemaker">确认交换</button>
+              <button class="confirm-btn mt" hover-class="confirm-btn-hover" @click="doTroublemaker">确认交换</button>
             </view>
           </view>
 
@@ -337,9 +338,9 @@
             <view v-else>
               <text>盲换中央的牌:</text>
               <view class="center-cards mt">
-                <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 0 })">换左侧</button>
-                <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 1 })">换中间</button>
-                <button size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 2 })">换右侧</button>
+                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 0 })">换左侧</button>
+                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 1 })">换中间</button>
+                <button class="action-btn" hover-class="action-btn-hover" size="mini" @click.stop="submitNightAction({ type: 'DRUNK_SWAP', centerIndex: 2 })">换右侧</button>
               </view>
             </view>
           </view>
@@ -370,10 +371,10 @@
           </view>
 
           <view style="margin-top: 40rpx;" v-if="['werewolf', 'minion', 'mason', 'insomniac'].includes(myInitialRole) || (myInitialRole==='werewolf' && nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0)">
-             <button class="btn" type="default" @click.stop="submitNightAction({ type: 'CONFIRM' })">确认完毕</button>
+             <button class="confirm-btn" hover-class="confirm-btn-hover" @click.stop="submitNightAction({ type: 'CONFIRM' })">确认完毕</button>
           </view>
           <view style="margin-top: 20rpx;" v-else>
-             <button class="btn" type="default" @click.stop="submitNightAction({ type: 'NONE' })">放弃行动</button>
+             <button class="confirm-btn" hover-class="confirm-btn-hover" style="background: linear-gradient(135deg, #e11d48, #be123c) !important; box-shadow: 0 8rpx 20rpx rgba(225, 29, 72, 0.4), inset 0 2rpx 4rpx rgba(255, 255, 255, 0.3) !important;" @click.stop="submitNightAction({ type: 'NONE' })">放弃行动</button>
           </view>
         </view>
         
@@ -404,11 +405,36 @@
           :key="p.sessionId"
           style="display: flex; justify-content: space-between; align-items: center;">
           <text class="font-bold text-slate-700" style="font-size: 32rpx; margin-right: 16rpx;">[{{ p.seatNumber }}号] {{ p.nickname }}</text>
-          <button size="mini" type="primary" @click="submitVote(p.seatNumber)">投票</button>
+          <button class="action-btn" hover-class="action-btn-hover" size="mini" type="primary" @click="submitVote(p.seatNumber)">投票</button>
         </view>
         <button class="btn mt" type="default" @click="submitVote(-1)">弃权</button>
       </view>
     </view>
+      </template>
+
+      
+            <!-- SGS 游戏视图 -->
+      <template v-else-if="gameType === 'sgs'">
+        <view v-if="appState === 'PLAYING'" class="section center-layout night-section">
+          <text class="night-title" style="margin-bottom: 40rpx; color: #38bdf8;">三国杀身份确认</text>
+          <text v-if="nightPanelOpen && myInitialRole === 'lord'" style="color: #ffd700; font-weight: bold; font-size: 36rpx; text-shadow: 0 4rpx 10rpx rgba(0,0,0,0.8); margin-bottom: 20rpx; padding: 10rpx 30rpx; background: rgba(0,0,0,0.6); border-radius: 20rpx; border: 2px solid #ffd700;">⚠️ 您的身份需要向全场公开</text>
+          
+          <view class="flip-container mt">
+            <view class="flipper" :class="{ 'is-flipped': nightPanelOpen }">
+              <view class="front" @click.stop="nightPanelOpen = true">
+                <view class="sgs-back"></view>
+              </view>
+              
+              <view class="back role-card-3d" style="border: none; background: #000; padding: 0;">
+                <view class="role-sprite-large sgs-sprite" :style="{'background-position': ROLES_DICTIONARY[myInitialRole]?.spritePosition}"></view>
+              </view>
+            </view>
+          </view>
+          
+          <view v-if="nightPanelOpen" class="role-info-side" style="margin-top: 40rpx; align-items: center; width: 100%;">
+            <button class="hide-panel-btn" size="mini" @click.stop="nightPanelOpen = false">🙈 收起（防窥）</button>
+          </view>
+        </view>
       </template>
 
       <!-- Avalon 游戏视图 -->
@@ -427,7 +453,7 @@
       <ShareQrcodeModal
         v-if="showShareModal"
         :roomId="roomId"
-        :gameName="gameType === 'onuw' ? '一夜终极狼人' : '阿瓦隆'"
+        :gameName="gameType === 'onuw' ? '一夜终极狼人' : gameType === 'avalon' ? '阿瓦隆' : '三国杀'"
         @close="showShareModal = false"
       />
     </transition>
@@ -444,7 +470,11 @@ import LoginView from '../../components/LoginView.vue';
 import PlayerAvatar from '../../components/PlayerAvatar.vue';
 
 // 角色字典映射 (一夜狼和阿瓦隆彻底分离防止覆盖)
-const ONUW_ROLE_NAMES = {
+
+  const SGS_ROLE_NAMES = {
+    lord: '主公', loyalist: '忠臣', rebel: '反贼', renegade: '内奸'
+  };
+  const ONUW_ROLE_NAMES = {
   werewolf: '狼人', minion: '爪牙', mason: '守夜人',
   seer: '预言家', robber: '强盗', troublemaker: '捣蛋鬼',
   drunk: '酒鬼', insomniac: '失眠者', villager: '平民',
@@ -972,14 +1002,28 @@ const RECOMMENDED_BOARDS = {
   10: ['werewolf', 'werewolf', 'minion', 'mason', 'mason', 'seer', 'robber', 'troublemaker', 'insomniac', 'drunk', 'hunter', 'villager', 'villager']
 };
 
-const applyRecommend = (n) => {
-  if (RECOMMENDED_BOARDS[n]) {
-    selectedRoles.value = [...RECOMMENDED_BOARDS[n]];
-    socket.emit('update_settings', { sessionId: sessionId.value, roomId: roomId.value, settings: { selectedRoles: selectedRoles.value } });
-    uni.showToast({ title: `已应用 ${n} 人局智能推荐`, icon: 'success' });
-  }
-};
 
+  const SGS_RECOMMENDED_BOARDS = {
+    4: ['lord', 'loyalist', 'rebel', 'renegade'],
+    5: ['lord', 'loyalist', 'rebel', 'rebel', 'renegade'],
+    6: ['lord', 'loyalist', 'rebel', 'rebel', 'rebel', 'renegade'],
+    7: ['lord', 'loyalist', 'loyalist', 'rebel', 'rebel', 'rebel', 'renegade'],
+    8: ['lord', 'loyalist', 'loyalist', 'rebel', 'rebel', 'rebel', 'rebel', 'renegade'],
+    9: ['lord', 'loyalist', 'loyalist', 'loyalist', 'rebel', 'rebel', 'rebel', 'rebel', 'renegade'],
+    10: ['lord', 'loyalist', 'loyalist', 'loyalist', 'rebel', 'rebel', 'rebel', 'rebel', 'renegade', 'renegade']
+  };
+
+  const applyRecommend = (n) => {
+    if (gameType.value === 'sgs' && SGS_RECOMMENDED_BOARDS[n]) {
+      selectedRoles.value = [...SGS_RECOMMENDED_BOARDS[n]];
+      socket.emit('update_settings', { sessionId: sessionId.value, roomId: roomId.value, settings: { selectedRoles: selectedRoles.value } });
+      uni.showToast({ title: `已应用 ${n} 人局智能推荐`, icon: 'success' });
+    } else if (gameType.value === 'onuw' && RECOMMENDED_BOARDS[n]) {
+      selectedRoles.value = [...RECOMMENDED_BOARDS[n]];
+      socket.emit('update_settings', { sessionId: sessionId.value, roomId: roomId.value, settings: { selectedRoles: selectedRoles.value } });
+      uni.showToast({ title: `已应用 ${n} 人局智能推荐`, icon: 'success' });
+    }
+  };
 const getRoleCount = (roleId) => {
   return selectedRoles.value.filter(r => r === roleId).length;
 };
@@ -1009,11 +1053,16 @@ const changeRoleCount = (roleId, delta) => {
 };
 
 const startGame = () => {
-  if (gameType.value === 'onuw') {
-    const targetCount = players.value.length + 3;
-    if (selectedRoles.value.length !== targetCount) {
-      return uni.showToast({ title: `牌数必须为 ${targetCount} 张！(当前 ${selectedRoles.value.length} 张)`, icon: 'none' });
-    }
+    if (gameType.value === 'onuw') {
+      const targetCount = players.value.length + 3;
+      if (selectedRoles.value.length !== targetCount) {
+        return uni.showToast({ title: `牌数必须为 ${targetCount} 张！(当前 ${selectedRoles.value.length} 张)`, icon: 'none' });
+      }
+    } else if (gameType.value === 'sgs') {
+      const targetCount = players.value.length;
+      if (selectedRoles.value.length !== targetCount) {
+        return uni.showToast({ title: `牌数必须为 ${targetCount} 张！(当前 ${selectedRoles.value.length} 张)`, icon: 'none' });
+      }
   }
   socket.emit('start_game', { sessionId: sessionId.value, roomId: roomId.value });
 };
@@ -1263,10 +1312,67 @@ const submitVote = (targetseatNumber) => {
 .card-name { color: #fff; font-size: 48rpx; font-weight: bold; }
 
 .action-panel { width: 100%; padding: 40rpx; border-radius: 16rpx; text-align: center; }
-.active-turn { background: #e8f8f5; border: 2px solid #1abc9c; }
-.blind-turn { background: #f9ebea; border: 2px dashed #e74c3c; opacity: 0.8; }
-.action-title { font-size: 32rpx; font-weight: bold; margin-bottom: 20rpx; display: block; }
+.active-turn { 
+  background: linear-gradient(145deg, #1e293b, #0f172a); 
+  border: 1px solid rgba(56, 189, 248, 0.3); 
+  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.5); 
+  color: #f1f5f9; 
+}
+.blind-turn { 
+  background: rgba(15, 23, 42, 0.8); 
+  border: 2px dashed rgba(255, 255, 255, 0.2); 
+  color: #94a3b8; 
+  opacity: 0.9; 
+}
+.action-title { 
+  font-size: 36rpx; 
+  font-weight: 800; 
+  margin-bottom: 24rpx; 
+  display: block; 
+  color: #38bdf8; 
+  letter-spacing: 2rpx; 
+}
 .temp-text { color: #7f8c8d; font-size: 28rpx; }
+
+.action-btn {
+  background: linear-gradient(145deg, #334155, #1e293b) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc !important;
+  border-radius: 16rpx !important;
+  padding: 10rpx 30rpx !important;
+  font-size: 28rpx !important;
+  font-weight: bold !important;
+  box-shadow: inset 0 2rpx 4rpx rgba(255, 255, 255, 0.1), 0 4rpx 10rpx rgba(0,0,0,0.4) !important;
+  transition: all 0.2s ease;
+  margin: 0 10rpx;
+}
+.action-btn-hover {
+  transform: scale(0.95);
+  background: linear-gradient(145deg, #1e293b, #0f172a) !important;
+  box-shadow: inset 0 4rpx 10rpx rgba(0,0,0,0.6) !important;
+}
+.confirm-btn {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #ffffff !important;
+  font-size: 34rpx !important;
+  font-weight: 900 !important;
+  border-radius: 20rpx !important;
+  padding: 20rpx 0 !important;
+  width: 90%;
+  margin: 20rpx auto 0 !important;
+  box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.4), inset 0 2rpx 4rpx rgba(255, 255, 255, 0.3) !important;
+  border: none !important;
+  transition: all 0.2s ease;
+  display: block;
+}
+.confirm-btn-hover {
+  transform: scale(0.95);
+  box-shadow: 0 4rpx 10rpx rgba(16, 185, 129, 0.3), inset 0 4rpx 12rpx rgba(0, 0, 0, 0.2) !important;
+}
+.action-panel text {
+  line-height: 1.6;
+}
+
 
 .night-mask { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60rpx 40rpx; background: #f8f9fa; border-radius: 16rpx; border: 2px dashed #ced4da; margin-top: 40rpx; }
 .mask-title { font-size: 40rpx; font-weight: bold; margin-bottom: 20rpx; color: #2c3e50; }
@@ -1408,9 +1514,23 @@ const submitVote = (targetseatNumber) => {
 
 .avalon-sprite {
   background-image: url('/static/avalon-sprite.jpg');
-  background-size: 400% 365.5%;
+  background-size: 448.72% 386.72%;
   flex-shrink: 0;
 }
+.sgs-sprite {
+  background-image: url('/static/sgs-sprite.png');
+  background-size: 200% 200%;
+}
+.sgs-back {
+  background-image: url('/static/sgs-back.png');
+  background-size: cover;
+  background-position: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 20rpx;
+  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.5);
+}
+
 
 .role-card {
   background: #161D2B;

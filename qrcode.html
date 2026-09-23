@@ -1,102 +1,37 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>一夜终极狼人 - 扫码进入游戏</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            text-align: center;
-            max-width: 500px;
-        }
-        h1 {
-            font-size: 28px;
-            color: #2d3748;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-        .subtitle {
-            font-size: 14px;
-            color: #718096;
-            margin-bottom: 30px;
-        }
-        .qr-wrapper {
-            background: white;
-            padding: 20px;
-            border-radius: 16px;
-            display: inline-block;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .qr-wrapper img {
-            display: block;
-            width: 280px;
-            height: 280px;
-        }
-        .url {
-            font-size: 13px;
-            color: #4a5568;
-            background: #f7fafc;
-            padding: 12px 16px;
-            border-radius: 8px;
-            word-break: break-all;
-            margin-top: 20px;
-            font-family: 'Courier New', monospace;
-        }
-        .tip {
-            font-size: 12px;
-            color: #a0aec0;
-            margin-top: 15px;
-            line-height: 1.6;
-        }
-        .status {
-            display: inline-block;
-            background: #48bb78;
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 15px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一夜终极狼人 - 扫码进入游戏</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
+.container{background:#fff;border-radius:24px;padding:40px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;max-width:500px}
+h1{font-size:28px;color:#2d3748;margin-bottom:10px;font-weight:700}
+.subtitle{font-size:14px;color:#718096;margin-bottom:30px}
+.qr-wrapper{background:#fff;padding:20px;border-radius:16px;display:inline-block;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.qr-wrapper img{display:block;width:280px;height:280px}
+.url{font-size:13px;color:#4a5568;background:#f7fafc;padding:12px 16px;border-radius:8px;word-break:break-all;margin-top:20px;font-family:'Courier New',monospace}
+.url a{color:#2b6cb0;text-decoration:none}
+.tip{font-size:12px;color:#a0aec0;margin-top:15px;line-height:1.6}
+.status{display:inline-block;background:#48bb78;color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-top:15px}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🐺 一夜终极狼人</h1>
-        <div class="subtitle">扫描二维码开始游戏</div>
-
-        <div class="qr-wrapper">
-            <img src="qrcode.png" alt="游戏入口二维码">
-        </div>
-
-        <div class="status">✓ 服务已启动</div>
-
-        <div class="url">http://10.6.201.183:3000</div>
-
-        <div class="tip">
-            <strong>局域网模式</strong>：手机需与电脑连接同一个 WiFi<br>
-            Cloudflare Tunnel 当前连接超时，已切换为局域网直连<br>
-            支持多人联机，创建房间后分享房间号
-        </div>
-    </div>
+<div class="container">
+  <h1>🐺 一夜终极狼人</h1>
+  <div class="subtitle">扫描二维码开始游戏</div>
+  <div class="qr-wrapper">
+    <img src="data:image/png;base64,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" alt="游戏入口二维码">
+  </div>
+  <div class="status">✓ 公网隧道已就绪</div>
+  <div class="url"><a href="https://hollywood-facility-outputs-like.trycloudflare.com" target="_blank" rel="noopener">https://hollywood-facility-outputs-like.trycloudflare.com</a></div>
+  <div class="tip">
+    <strong>Cloudflare Tunnel 公网直连</strong>：手机无需与电脑同一 WiFi<br>
+    生成时间 2026/9/23 09:58:09<br>
+    隧道进程关闭后此地址即失效，重启会得到新地址
+  </div>
+</div>
 </body>
 </html>

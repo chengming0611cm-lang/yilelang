@@ -1,5 +1,6 @@
 import { OnuwEngine } from './onuwEngine.js';
 import { AvalonEngine } from './avalonEngine.js';
+import { SgsEngine } from './sgsEngine.js';
 
 export class Room {
   constructor(roomId, hostSessionId) {
@@ -24,6 +25,9 @@ export class Room {
 
     if (this.gameType === 'onuw') {
       this.engine = new OnuwEngine(this);
+      this.engine.startGame(io);
+    } else if (this.gameType === 'sgs') {
+      this.engine = new SgsEngine(this);
       this.engine.startGame(io);
     } else if (this.gameType === 'avalon') {
       this.engine = new AvalonEngine(this);
