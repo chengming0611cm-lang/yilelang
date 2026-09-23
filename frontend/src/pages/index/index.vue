@@ -1153,6 +1153,8 @@ const joinRoom = (isAuto = false) => {
 
   socket.on('room_update', (data) => {
     players.value = data.players;
+    const me = data.players.find(p => p.sessionId === sessionId.value);
+    if (me) isHost.value = me.isHost;
     if (data.settings && data.settings.selectedRoles) {
       selectedRoles.value = data.settings.selectedRoles;
     }

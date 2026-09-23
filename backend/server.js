@@ -192,15 +192,18 @@ io.on('connection', (socket) => {
   
   // 移交房主
   socket.on('transfer_host', (data) => {
+    console.log('transfer_host received:', data);
     const { sessionId, roomId, targetId } = data;
     const room = RoomManager.getRoom(roomId);
     if (room && room.transferHost(sessionId, targetId)) {
       broadcastRoomUpdate(roomId);
     }
+  
   });
 
   // 踢出玩家
   socket.on('kick_player', (data) => {
+    console.log('kick_player received:', data);
     const { sessionId, roomId, targetId } = data;
     const room = RoomManager.getRoom(roomId);
     if (room) {
@@ -212,6 +215,7 @@ io.on('connection', (socket) => {
         broadcastRoomUpdate(roomId);
       }
     }
+  
   });
   
   // 7. 房主开启投票倒计时
