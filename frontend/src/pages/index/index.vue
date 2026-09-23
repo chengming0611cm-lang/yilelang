@@ -154,7 +154,7 @@
           <view 
             v-for="p in sortedPlayers" 
             :key="p.sessionId"
-            class="seat-podium" 
+            class="seat-podium" @click="onSeatPodiumClick(p)" 
             :class="{ 
               'is-me': p.sessionId === sessionId, 
               'is-offline': p.offline,
@@ -1288,7 +1288,15 @@ const joinRoom = (isAuto = false) => {
     playSound('end');
   });
 
-  socket.on('game_aborted', (data) => {
+  
+    socket.on('kicked_from_room', () => {
+      appState.value = 'LOBBY';
+      roomId.value = '';
+      uni.removeStorageSync('werewolf_roomId');
+      globalModal.value.show({ title: '您已被移出房间', content: '房主已将您移出房间。', type: 'alert' });
+    });
+
+    socket.on('game_aborted', (data) => {
     globalModal.value.show({ title: '游戏已中断', content: data.reason, type: 'alert' });
     appState.value = 'WAITING';
   });
@@ -1390,7 +1398,38 @@ const startGame = () => {
   socket.emit('start_game', { sessionId: sessionId.value, roomId: roomId.value });
 };
 
-const leaveRoom = () => {
+
+  const onSeatPodiumClick = (p) => {
+    if (appState.value !== 'WAITING') return;
+    if (!isHost.value) return; // Only host can click
+    if (p.sessionId === sessionId.value) return; // Can't click self
+
+    const opts = [
+      { label: '👑 移交房主', value: 'transfer_host' }
+    ];
+    
+    if (!p.isReady) {
+      opts.push({ label: '🥾 踢出房间', value: 'kick_player' });
+    } else {
+      opts.push({ label: '🚫 (已准备，无法踢出)', value: 'disabled' });
+    }
+
+    globalModal.value.show({
+      title: `对 [${p.seatNumber}号] ${p.nickname} 的操作`,
+      type: 'select',
+      options: opts
+    }).then(res => {
+      if (res.confirm) {
+        if (res.value === 'transfer_host') {
+          socket.emit('transfer_host', { sessionId: sessionId.value, roomId: roomId.value, targetId: p.sessionId });
+        } else if (res.value === 'kick_player') {
+          socket.emit('kick_player', { sessionId: sessionId.value, roomId: roomId.value, targetId: p.sessionId });
+        }
+      }
+    });
+  };
+
+  const leaveRoom = () => {
   globalModal.value.show({
       title: '退出房间',
       content: '中途退出将导致当前游戏异常，确认退出吗?',
