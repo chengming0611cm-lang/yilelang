@@ -71,8 +71,7 @@ export const ROLES_DICTIONARY = {
 
   robber: {
     name: '强盗',
-    image: '/static/cards/robber.png',
-    spritePosition: '33.333% 33.333%',
+    spritePosition: '100% 33.333%',
     color: '#d35400',
     camp: '好人阵营',
     description: '每晚醒来，可选择一名玩家交换底牌，并查看自己换回的新底牌。',
@@ -81,8 +80,7 @@ export const ROLES_DICTIONARY = {
 
   troublemaker: {
     name: '捣蛋鬼',
-    image: '/static/cards/troublemaker.png',
-    spritePosition: '100% 33.333%',
+    spritePosition: '0% 66.666%',
     color: '#f39c12',
     camp: '好人阵营',
     description: '每晚醒来，可选择两名其他玩家交换底牌，但不查看交换后的牌。',
@@ -91,8 +89,7 @@ export const ROLES_DICTIONARY = {
 
   drunk: {
     name: '酒鬼',
-    image: '/static/cards/drunk.png',
-    spritePosition: '0% 66.666%',
+    spritePosition: '33.333% 66.666%',
     color: '#1abc9c',
     camp: '好人阵营',
     description: '每晚醒来，必须将自己的底牌与中央的一张牌交换，但不查看新牌。',
@@ -101,8 +98,7 @@ export const ROLES_DICTIONARY = {
 
   insomniac: {
     name: '失眠者',
-    image: '/static/cards/insomniac.png',
-    spritePosition: '33.333% 66.666%',
+    spritePosition: '66.666% 66.666%',
     color: '#34495e',
     camp: '好人阵营',
     description: '每晚最后醒来，查看自己的底牌是否在夜晚被其他玩家换走。',
@@ -121,8 +117,7 @@ export const ROLES_DICTIONARY = {
 
   hunter: {
     name: '猎人',
-    image: '/static/cards/hunter.png',
-    spritePosition: '66.666% 66.666%',
+    spritePosition: '66.666% 100%',
     color: '#27ae60',
     camp: '好人阵营',
     description: '夜晚不醒来。如果被投票出局，被你投票的玩家也将随你一起出局。',
@@ -131,8 +126,7 @@ export const ROLES_DICTIONARY = {
 
   tanner: {
     name: '皮匠',
-    image: '/static/cards/tanner.png',
-    spritePosition: '0% 100%',
+    spritePosition: '100% 100%',
     color: '#d35400',
     camp: '独立阵营',
     description: '夜晚不醒来。你的胜利条件是：在白天被投票出局。',
@@ -141,8 +135,7 @@ export const ROLES_DICTIONARY = {
 
   doppelganger: {
     name: '化身幽灵',
-    image: '/static/cards/doppelganger.png',
-    spritePosition: '33.333% 100%',
+    spritePosition: '0% 0%',
     color: '#bdc3c7',
     camp: '未知阵营',
     description: '夜晚第一个醒来，查看一名玩家的底牌并立刻获得该角色的能力和阵营。',

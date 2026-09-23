@@ -510,16 +510,17 @@
                   </view>
                 </view>
                 <view v-else class="lone-wolf-box">
-                  <text class="intel-label">你是场上唯一的孤狼，可查看一张中央底牌：</text>
-                  <view class="center-cards-row">
-                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 0 })">查看左侧牌</button>
-                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 1 })">查看中间牌</button>
-                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 2 })">查看右侧牌</button>
+                    <text class="intel-label" v-if="nightViewData.werewolfFirstPick !== undefined">第一张是狼人！你可以再查看一张：</text>
+                    <text class="intel-label" v-else>你是场上唯一的孤狼，可查看一张中央底牌：</text>
+                    <view class="center-cards-row">
+                      <button class="action-btn" v-if="nightViewData.werewolfFirstPick !== 0" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 0, isSecondView: nightViewData.werewolfFirstPick !== undefined })">查看左侧牌</button>
+                      <button class="action-btn" v-if="nightViewData.werewolfFirstPick !== 1" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 1, isSecondView: nightViewData.werewolfFirstPick !== undefined })">查看中间牌</button>
+                      <button class="action-btn" v-if="nightViewData.werewolfFirstPick !== 2" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 2, isSecondView: nightViewData.werewolfFirstPick !== undefined })">查看右侧牌</button>
+                    </view>
                   </view>
                 </view>
-              </view>
 
-              <!-- 预言家 -->
+                <!-- 预言家 -->
               <view v-else-if="myInitialRole === 'seer'" class="role-action-content">
                 <view v-if="nightViewData.seenRole" class="intel-box result-highlight">
                   <text class="intel-label">你查看到的玩家底牌是：</text>
@@ -626,13 +627,16 @@
 
               <!-- 确认操作与放弃行动按钮 -->
               <view class="action-footer-btns">
-                <view v-if="['werewolf', 'minion', 'mason', 'insomniac'].includes(myInitialRole) || (myInitialRole==='werewolf' && nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0)">
-                  <button class="confirm-btn" hover-class="confirm-btn-hover" @click.stop="submitNightAction({ type: 'CONFIRM' })">确认完毕</button>
+                  <view v-if="['werewolf', 'minion', 'mason', 'insomniac'].includes(myInitialRole) || (myInitialRole==='werewolf' && nightViewData.werewolfMates && nightViewData.werewolfMates.length > 0)">
+                    <button class="confirm-btn" hover-class="confirm-btn-hover" @click.stop="submitNightAction({ type: 'CONFIRM' })">确认完毕</button>
+                  </view>
+                  <view v-else-if="myInitialRole === 'drunk'" style="text-align: center; padding: 20rpx 0;">
+                    <text style="color: #ef4444; font-size: 26rpx; font-weight: bold;">(注：酒鬼必须盲换一张牌，不可跳过)</text>
+                  </view>
+                  <view v-else>
+                    <button class="pass-btn" hover-class="pass-btn-hover" @click.stop="submitNightAction({ type: 'NONE' })">不发动技能 (跳过)</button>
+                  </view>
                 </view>
-                <view v-else>
-                  <button class="pass-btn" hover-class="pass-btn-hover" @click.stop="submitNightAction({ type: 'NONE' })">放弃行动</button>
-                </view>
-              </view>
             </view>
             
             <!-- 等待他人行动状态 -->
@@ -692,7 +696,7 @@
                 hover-class="action-btn-hover" 
                 @click="submitVote(p.seatNumber)"
                 :disabled="votingCountdown === null">
-                {{ selectedVote === p.seatNumber ? '已投TA' : '投TA' }}
+                {{ selectedVote === p.seatNumber ? (p.seatNumber === mySeatNumber ? '已选自己' : '已投TA') : (p.seatNumber === mySeatNumber ? '投自己' : '投TA') }}
               </button>
             </view>
           </view>
@@ -801,7 +805,7 @@ const gameType = ref('onuw'); // 当前房间选定的游戏类型
 const nickname = ref('');
 const roomId = ref('');
 const sessionId = ref('');
-const isHost = ref(false);
+const isHost = computed(() => { const me = players.value.find(p => p.sessionId === sessionId.value); return me ? me.isHost : false; });
 const players = ref([]);
 const sortedPlayers = computed(() => [...players.value].sort((a, b) => a.seatNumber - b.seatNumber));
 const selectedRoles = ref([]);
@@ -1085,7 +1089,7 @@ const joinRoom = (isAuto = false) => {
           isDisconnected.value = false;
           appState.value = res.roomStatus;
           gameType.value = res.gameType;
-          isHost.value = res.isHost;
+          
           if (res.settings) {
              if (res.settings.selectedRoles) {
                selectedRoles.value = res.settings.selectedRoles;
@@ -1122,7 +1126,7 @@ const joinRoom = (isAuto = false) => {
       }, (res) => {
         if (res.success) {
           appState.value = res.roomStatus || res.status;
-          isHost.value = res.isHost;
+          
           if (res.gameType) {
             gameType.value = res.gameType;
           }
@@ -1130,8 +1134,21 @@ const joinRoom = (isAuto = false) => {
             myInitialRole.value = res.playerState.initialRole;
           }
           if (res.settings && res.settings.selectedRoles) {
-            selectedRoles.value = res.settings.selectedRoles;
-          }
+              selectedRoles.value = res.settings.selectedRoles;
+            }
+            if (gameType.value === 'avalon' && res.gameState) {
+               avalonState.value.role = res.playerState.initialRole;
+               avalonState.value.phase = res.gameState.phase;
+               avalonState.value.vision = res.gameState.vision || {};
+               avalonState.value.leaderSeat = res.gameState.leaderSeat;
+               avalonState.value.currentQuestSize = res.gameState.currentQuestSize;
+               avalonState.value.failedVotes = res.gameState.failedVotes;
+               avalonState.value.proposedTeam = res.gameState.proposedTeam || [];
+               avalonState.value.questResults = res.gameState.questResults || [];
+            } else if (gameType.value === 'onuw' && res.gameState) {
+               currentNightRole.value = res.gameState.currentNightRole;
+               nightViewData.value = res.gameState.nightViewData;
+            }
         } else {
           uni.showToast({ title: res.msg, icon: 'none' });
         }
@@ -1153,6 +1170,8 @@ const joinRoom = (isAuto = false) => {
 
   socket.on('room_update', (data) => {
     players.value = data.players;
+    const me = data.players.find(p => p.sessionId === sessionId.value);
+    
     if (data.settings && data.settings.selectedRoles) {
       selectedRoles.value = data.settings.selectedRoles;
     }
@@ -1503,15 +1522,22 @@ const doTroublemaker = () => {
 };
 
 const submitNightAction = (actionData) => {
-  socket.emit('night_action', { 
-    sessionId: sessionId.value, 
-    roomId: roomId.value, 
-    actionData 
-  }, (res) => {
-    if (res && res.success !== false) {
-      isMyTurn.value = false;
-      
-      if (res.seenRole) {
+    socket.emit('night_action', { 
+      sessionId: sessionId.value, 
+      roomId: roomId.value, 
+      actionData 
+    }, (res) => {
+      if (res && res.success !== false) {
+        
+        if (res.allowSecondView) {
+          nightViewData.value.werewolfFirstPick = actionData.centerIndex;
+          uni.showToast({ title: '第一张是狼人！你可以再查看一张', icon: 'none' });
+          return;
+        }
+
+        isMyTurn.value = false;
+        
+        if (res.seenRole) {
         globalModal.value.show({ title: '查看结果', content: `你看到的底牌是：${ROLE_NAMES[res.seenRole]}`, type: 'alert' });
       } else if (res.seenRoles) {
         globalModal.value.show({ title: '查看结果', content: `你看到中央的两张牌是：${ROLE_NAMES[res.seenRoles[0]]} 和 ${ROLE_NAMES[res.seenRoles[1]]}`, type: 'alert' });
