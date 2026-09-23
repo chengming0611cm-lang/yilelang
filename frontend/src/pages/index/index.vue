@@ -510,16 +510,17 @@
                   </view>
                 </view>
                 <view v-else class="lone-wolf-box">
-                  <text class="intel-label">你是场上唯一的孤狼，可查看一张中央底牌：</text>
-                  <view class="center-cards-row">
-                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 0 })">查看左侧牌</button>
-                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 1 })">查看中间牌</button>
-                    <button class="action-btn" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 2 })">查看右侧牌</button>
+                    <text class="intel-label" v-if="nightViewData.werewolfFirstPick !== undefined">第一张是狼人！你可以再查看一张：</text>
+                    <text class="intel-label" v-else>你是场上唯一的孤狼，可查看一张中央底牌：</text>
+                    <view class="center-cards-row">
+                      <button class="action-btn" v-if="nightViewData.werewolfFirstPick !== 0" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 0, isSecondView: nightViewData.werewolfFirstPick !== undefined })">查看左侧牌</button>
+                      <button class="action-btn" v-if="nightViewData.werewolfFirstPick !== 1" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 1, isSecondView: nightViewData.werewolfFirstPick !== undefined })">查看中间牌</button>
+                      <button class="action-btn" v-if="nightViewData.werewolfFirstPick !== 2" hover-class="action-btn-hover" @click.stop="submitNightAction({ type: 'WEREWOLF_VIEW', centerIndex: 2, isSecondView: nightViewData.werewolfFirstPick !== undefined })">查看右侧牌</button>
+                    </view>
                   </view>
                 </view>
-              </view>
 
-              <!-- 预言家 -->
+                <!-- 预言家 -->
               <view v-else-if="myInitialRole === 'seer'" class="role-action-content">
                 <view v-if="nightViewData.seenRole" class="intel-box result-highlight">
                   <text class="intel-label">你查看到的玩家底牌是：</text>
@@ -692,7 +693,7 @@
                 hover-class="action-btn-hover" 
                 @click="submitVote(p.seatNumber)"
                 :disabled="votingCountdown === null">
-                {{ selectedVote === p.seatNumber ? '已投TA' : '投TA' }}
+                {{ selectedVote === p.seatNumber ? (p.seatNumber === mySeatNumber ? '已选自己' : '已投TA') : (p.seatNumber === mySeatNumber ? '投自己' : '投TA') }}
               </button>
             </view>
           </view>
@@ -1518,15 +1519,22 @@ const doTroublemaker = () => {
 };
 
 const submitNightAction = (actionData) => {
-  socket.emit('night_action', { 
-    sessionId: sessionId.value, 
-    roomId: roomId.value, 
-    actionData 
-  }, (res) => {
-    if (res && res.success !== false) {
-      isMyTurn.value = false;
-      
-      if (res.seenRole) {
+    socket.emit('night_action', { 
+      sessionId: sessionId.value, 
+      roomId: roomId.value, 
+      actionData 
+    }, (res) => {
+      if (res && res.success !== false) {
+        
+        if (res.allowSecondView) {
+          nightViewData.value.werewolfFirstPick = actionData.centerIndex;
+          uni.showToast({ title: '第一张是狼人！你可以再查看一张', icon: 'none' });
+          return;
+        }
+
+        isMyTurn.value = false;
+        
+        if (res.seenRole) {
         globalModal.value.show({ title: '查看结果', content: `你看到的底牌是：${ROLE_NAMES[res.seenRole]}`, type: 'alert' });
       } else if (res.seenRoles) {
         globalModal.value.show({ title: '查看结果', content: `你看到中央的两张牌是：${ROLE_NAMES[res.seenRoles[0]]} 和 ${ROLE_NAMES[res.seenRoles[1]]}`, type: 'alert' });

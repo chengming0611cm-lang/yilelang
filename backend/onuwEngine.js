@@ -171,9 +171,24 @@ export class OnuwEngine extends GameEngine {
 
     switch (actionData.type) {
       case 'WEREWOLF_VIEW':
-        result.seenRole = this.game.centerCards[actionData.centerIndex];
-        logText = `狼人查看了中央第 ${actionData.centerIndex + 1} 张牌`;
-        break;
+          const isLoneWolf = allPlayersArray.filter(p => p.initialRole === ROLES.WEREWOLF).length === 1;
+          const seen = this.game.centerCards[actionData.centerIndex];
+          if (isLoneWolf && seen === ROLES.WEREWOLF && !actionData.isSecondView) {
+            player.hasActed = false;
+            player.werewolfFirstViewIndex = actionData.centerIndex;
+            result.seenRole = seen;
+            result.allowSecondView = true;
+            logText = `孤狼查看了中央第 ${actionData.centerIndex + 1} 张牌，是狼人，获得了再看一张的机会`;
+          } else {
+            if (actionData.isSecondView) {
+              result.seenRoles = [ROLES.WEREWOLF, seen];
+              logText = `孤狼第二次查看了中央第 ${actionData.centerIndex + 1} 张牌`;
+            } else {
+              result.seenRole = seen;
+              logText = `狼人查看了中央第 ${actionData.centerIndex + 1} 张牌`;
+            }
+          }
+          break;
       case 'SEER_PLAYER':
         const targetP = allPlayersArray.find(p => p.seatNumber === actionData.targetSeat);
         if (targetP) {
@@ -310,6 +325,19 @@ export class OnuwEngine extends GameEngine {
     if (maxVotes <= 1) exiledSeats = [];
 
     const exiledPlayers = exiledSeats.map(seat => allPlayers.find(p => p.seatNumber === seat));
+
+    
+    // ======== 猎人带人判定 ========
+    // ======== 猎人带人判定 ========
+    const hunterPlayers = exiledPlayers.filter(p => p.currentRole === ROLES.HUNTER);
+    hunterPlayers.forEach(hunter => {
+      if (hunter.votesFor !== null && hunter.votesFor !== -1) {
+        const targetPlayer = allPlayers.find(p => p.seatNumber === hunter.votesFor);
+        if (targetPlayer && !exiledPlayers.includes(targetPlayer)) {
+          exiledPlayers.push(targetPlayer);
+        }
+      }
+    });
 
     let winner = 'error';
     let summary = '';
