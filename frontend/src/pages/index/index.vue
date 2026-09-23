@@ -1130,8 +1130,21 @@ const joinRoom = (isAuto = false) => {
             myInitialRole.value = res.playerState.initialRole;
           }
           if (res.settings && res.settings.selectedRoles) {
-            selectedRoles.value = res.settings.selectedRoles;
-          }
+              selectedRoles.value = res.settings.selectedRoles;
+            }
+            if (gameType.value === 'avalon' && res.gameState) {
+               avalonState.value.role = res.playerState.initialRole;
+               avalonState.value.phase = res.gameState.phase;
+               avalonState.value.vision = res.gameState.vision || {};
+               avalonState.value.leaderSeat = res.gameState.leaderSeat;
+               avalonState.value.currentQuestSize = res.gameState.currentQuestSize;
+               avalonState.value.failedVotes = res.gameState.failedVotes;
+               avalonState.value.proposedTeam = res.gameState.proposedTeam || [];
+               avalonState.value.questResults = res.gameState.questResults || [];
+            } else if (gameType.value === 'onuw' && res.gameState) {
+               currentNightRole.value = res.gameState.currentNightRole;
+               nightViewData.value = res.gameState.nightViewData;
+            }
         } else {
           uni.showToast({ title: res.msg, icon: 'none' });
         }
