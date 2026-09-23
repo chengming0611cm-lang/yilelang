@@ -631,7 +631,7 @@
                   <button class="confirm-btn" hover-class="confirm-btn-hover" @click.stop="submitNightAction({ type: 'CONFIRM' })">确认完毕</button>
                 </view>
                 <view v-else>
-                  <button class="pass-btn" hover-class="pass-btn-hover" @click.stop="submitNightAction({ type: 'NONE' })">放弃行动</button>
+                  <button class="pass-btn" hover-class="pass-btn-hover" @click.stop="submitNightAction({ type: 'NONE' })">不发动技能 (跳过)</button>
                 </view>
               </view>
             </view>
