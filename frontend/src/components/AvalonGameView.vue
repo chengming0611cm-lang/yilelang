@@ -59,28 +59,8 @@
             <text class="vision-player evil-tag" v-for="seat in avalonState.vision.evils" :key="seat">
               [{{ seat }}号] {{ getPlayerName(seat) }}
             </text>
-          
-    <!-- 随时查看身份弹窗 -->
-    <view v-if="showRoleModal" class="avalon-modal-mask" @click="showRoleModal = false">
-      <view class="avalon-modal-content" @click.stop>
-        <view class="avalon-modal-header">
-          <text class="avalon-modal-title">你的底牌</text>
-        </view>
-        <view class="avalon-modal-body">
-          <view class="role-card-3d" :class="isGoodRole ? 'glow-good' : 'glow-evil'" style="margin: 0 auto; transform: scale(1.1);">
-            <view class="role-sprite-large avalon-sprite" :style="{'background-position': AVALON_ROLES_DICTIONARY[avalonState.role]?.spritePosition}"></view>
-            <view class="card-name-overlay">
-              <text class="card-overlay-title">{{ getRoleName(avalonState.role) }}</text>
-            </view>
           </view>
-        </view>
-        <view class="avalon-modal-footer">
-          <button class="avalon-modal-btn confirm-btn" hover-class="confirm-btn-hover" @click="showRoleModal = false">收起底牌</button>
-        </view>
-      </view>
-    </view>
-  </view>
-</template>
+        </template>
 
         <template v-else-if="avalonState.role === 'percival'">
           <text class="vision-text">你看到的梅林嫌疑人（梅林或莫甘娜）有：</text>
@@ -334,6 +314,26 @@
         <text class="close-tip mt">({{ voteResultCountdown }}s) 后自动返回对局...</text>
       </view>
     </view>
+  
+    <!-- 随时查看身份弹窗 -->
+    <view v-if="showRoleModal" class="avalon-modal-mask" @click="showRoleModal = false">
+      <view class="avalon-modal-content" @click.stop>
+        <view class="avalon-modal-header">
+          <text class="avalon-modal-title">你的底牌</text>
+        </view>
+        <view class="avalon-modal-body">
+          <view class="role-card-3d" :class="isGoodRole ? 'glow-good' : 'glow-evil'" style="margin: 0 auto; transform: scale(1.1);">
+            <view class="role-sprite-large avalon-sprite" :style="{'background-position': AVALON_ROLES_DICTIONARY[avalonState.role]?.spritePosition}"></view>
+            <view class="card-name-overlay">
+              <text class="card-overlay-title">{{ getRoleName(avalonState.role) }}</text>
+            </view>
+          </view>
+        </view>
+        <view class="avalon-modal-footer">
+          <button class="avalon-modal-btn confirm-btn" hover-class="confirm-btn-hover" @click="showRoleModal = false">收起底牌</button>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -526,6 +526,7 @@ watch(() => props.avalonState.voteResult, (newResult) => {
   font-weight: 600;
   box-shadow: 0 0 10rpx rgba(56, 189, 248, 0.2);
   transition: all 0.2s;
+  z-index: 10;
 }
 .view-role-btn:active {
   background: rgba(56, 189, 248, 0.2);
