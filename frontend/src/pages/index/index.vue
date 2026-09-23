@@ -801,7 +801,7 @@ const gameType = ref('onuw'); // 当前房间选定的游戏类型
 const nickname = ref('');
 const roomId = ref('');
 const sessionId = ref('');
-const isHost = ref(false);
+const isHost = computed(() => { const me = players.value.find(p => p.sessionId === sessionId.value); return me ? me.isHost : false; });
 const players = ref([]);
 const sortedPlayers = computed(() => [...players.value].sort((a, b) => a.seatNumber - b.seatNumber));
 const selectedRoles = ref([]);
@@ -1085,7 +1085,7 @@ const joinRoom = (isAuto = false) => {
           isDisconnected.value = false;
           appState.value = res.roomStatus;
           gameType.value = res.gameType;
-          isHost.value = res.isHost;
+          
           if (res.settings) {
              if (res.settings.selectedRoles) {
                selectedRoles.value = res.settings.selectedRoles;
@@ -1122,7 +1122,7 @@ const joinRoom = (isAuto = false) => {
       }, (res) => {
         if (res.success) {
           appState.value = res.roomStatus || res.status;
-          isHost.value = res.isHost;
+          
           if (res.gameType) {
             gameType.value = res.gameType;
           }
@@ -1154,7 +1154,7 @@ const joinRoom = (isAuto = false) => {
   socket.on('room_update', (data) => {
     players.value = data.players;
     const me = data.players.find(p => p.sessionId === sessionId.value);
-    if (me) isHost.value = me.isHost;
+    
     if (data.settings && data.settings.selectedRoles) {
       selectedRoles.value = data.settings.selectedRoles;
     }

@@ -17,6 +17,7 @@ export class Room {
     if (this.hostId !== hostSessionId) return false;
     if (!this.players.has(targetSessionId)) return false;
     this.hostId = targetSessionId;
+    this.players.get(targetSessionId).isReady = false;
     return true;
   }
 
