@@ -1204,6 +1204,8 @@ const joinRoom = (isAuto = false) => {
 
   socket.on('avalon_game_end', (data) => {
     appState.value = 'END';
+      votingCountdown.value = null;
+      selectedVote.value = null;
     avalonState.value.phase = 'end';
     gameResult.value = { winner: data.winner, summary: data.reason, exiledPlayers: [], finalRoles: data.finalRoles || [], timeline: [] };
   });
@@ -1273,7 +1275,11 @@ const joinRoom = (isAuto = false) => {
     }
   });
 
-  socket.on('game_ended', (result) => {
+  socket.on('voting_countdown', (timeLeft) => {
+      votingCountdown.value = timeLeft;
+    });
+    
+    socket.on('game_ended', (result) => {
     appState.value = 'END';
     gameResult.value = result;
     playSound('end');
