@@ -1,5 +1,6 @@
 <template>
   <view class="container">
+    <CustomModal ref="globalModal" />
     <!-- 全局断网重连遮罩 -->
     <view v-if="isDisconnected" class="disconnect-mask">
       <view class="disconnect-panel">
@@ -153,7 +154,7 @@
           <view 
             v-for="p in sortedPlayers" 
             :key="p.sessionId"
-            class="seat-podium" 
+            class="seat-podium" @click="onSeatPodiumClick(p)" 
             :class="{ 
               'is-me': p.sessionId === sessionId, 
               'is-offline': p.offline,
@@ -441,7 +442,7 @@
         <!-- 返回大厅按钮 -->
         <view class="mt-4 mb-6">
           <button v-if="isHost" class="confirm-btn" @click="forceReturnLobby">返回大厅并开启下一局</button>
-          <button v-else class="confirm-btn secondary-btn" @click="appState = 'WAITING'">返回大厅准备下一局</button>
+          <button v-else class="confirm-btn" @click="appState = 'WAITING'">返回大厅准备下一局</button>
         </view>
       </view>
 
@@ -530,9 +531,9 @@
                 </view>
                 <view v-else>
                   <text class="action-instruction">选择查看一名玩家底牌：</text>
-                  <picker class="picker-box" mode="selector" :range="otherPlayers" range-key="displayName" @change="onSeerPlayerChange">
+                  <view class="picker-box" hover-class="action-btn-hover" @click="openPlayerPicker('选择目标玩家', (p) => submitNightAction({ type: 'SEER_PLAYER', targetSeat: p.seatNumber }))">
                     <view class="picker-inner">🔍 点击选择目标玩家</view>
-                  </picker>
+                  </view>
                   
                   <text class="divider-text">— 或者选择查看中央两张底牌 —</text>
                   <view class="center-cards-row">
@@ -551,9 +552,9 @@
                 </view>
                 <view v-else>
                   <text class="action-instruction">选择一名玩家抢夺底牌：</text>
-                  <picker class="picker-box" mode="selector" :range="otherPlayers" range-key="displayName" @change="onRobPlayerChange">
+                  <view class="picker-box" hover-class="action-btn-hover" @click="openPlayerPicker('选择抢夺目标', (p) => submitNightAction({ type: 'ROB_PLAYER', targetSeat: p.seatNumber }))">
                     <view class="picker-inner">🗡️ 点击选择抢夺目标</view>
-                  </picker>
+                  </view>
                 </view>
               </view>
 
@@ -564,12 +565,12 @@
                 </view>
                 <view v-else>
                   <text class="action-instruction">选择两名其他玩家交换身份：</text>
-                  <picker class="picker-box" mode="selector" :range="otherPlayers" range-key="displayName" @change="(e) => tmP1 = otherPlayers[e.detail.value]">
-                    <view class="picker-inner">玩家 1: {{ tmP1 ? tmP1.displayName : '未选择' }}</view>
-                  </picker>
-                  <picker class="picker-box mt-2" mode="selector" :range="otherPlayers" range-key="displayName" @change="(e) => tmP2 = otherPlayers[e.detail.value]">
-                    <view class="picker-inner">玩家 2: {{ tmP2 ? tmP2.displayName : '未选择' }}</view>
-                  </picker>
+                  <view class="picker-box" hover-class="action-btn-hover" @click="openPlayerPicker('选择玩家1', (p) => { tmP1 = p })">
+                      <view class="picker-inner">玩家 1: {{ tmP1 ? tmP1.displayName : '未选择' }}</view>
+                    </view>
+                  <view class="picker-box mt-2" hover-class="action-btn-hover" @click="openPlayerPicker('选择玩家2', (p) => { tmP2 = p })">
+                      <view class="picker-inner">玩家 2: {{ tmP2 ? tmP2.displayName : '未选择' }}</view>
+                    </view>
                   <button class="confirm-btn mt-3" hover-class="confirm-btn-hover" @click="doTroublemaker">确认调换身份</button>
                 </view>
               </view>
@@ -659,13 +660,23 @@
           </view>
         </view>
 
-        <!-- ==================== VOTING (投票阶段) ==================== -->
+                <!-- ==================== VOTING (投票阶段) ==================== -->
         <view v-else-if="appState === 'VOTING'" class="voting-wrapper">
           <view class="voting-header">
             <text class="voting-title">🗳️ 全员投票放逐</text>
             <text class="voting-sub">选择你认为最可疑的玩家进行放逐，也可弃权</text>
           </view>
           
+          <view v-if="votingCountdown === null && isHost" style="margin-bottom: 30rpx; width: 100%;">
+            <button class="confirm-btn" @click="startVotingCountdown" style="width: 100%; border-radius: 12rpx; background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: bold; border: none;">▶️ 房主开启投票 (30s倒计时)</button>
+          </view>
+          <view v-else-if="votingCountdown !== null" style="margin-bottom: 30rpx; text-align: center;">
+            <text style="font-size: 40rpx; color: #ef4444; font-weight: 900;">⏳ 距离投票结束还有：{{ votingCountdown }}s</text>
+          </view>
+          <view v-else style="margin-bottom: 30rpx; text-align: center;">
+            <text style="font-size: 30rpx; color: #94a3b8;">等待房主开启投票...</text>
+          </view>
+
           <view class="voting-grid">
             <view 
               class="vote-player-item" 
@@ -675,15 +686,28 @@
                 <view class="vote-seat-badge">{{ p.seatNumber }}</view>
                 <text class="vote-player-name">{{ p.nickname }}</text>
               </view>
-              <button class="vote-action-btn" hover-class="action-btn-hover" @click="submitVote(p.seatNumber)">投TA</button>
+              <button 
+                class="vote-action-btn" 
+                :class="{'voted-active': selectedVote === p.seatNumber}"
+                hover-class="action-btn-hover" 
+                @click="submitVote(p.seatNumber)"
+                :disabled="votingCountdown === null">
+                {{ selectedVote === p.seatNumber ? '已投TA' : '投TA' }}
+              </button>
             </view>
           </view>
 
-          <view class="bottom-action-container">
-            <button class="abstain-btn" @click="submitVote(-1)">🏳️ 放弃本次投票（弃权）</button>
+          <view class="bottom-action-container" style="margin-top: 40rpx; width: 100%; position: relative;">
+            <button 
+              class="abstain-btn" 
+              :class="{'abstain-active': selectedVote === -1}"
+              @click="submitVote(-1)"
+              :disabled="votingCountdown === null">
+              🏳️ {{ selectedVote === -1 ? '已选弃权' : '放弃本次投票（弃权）' }}
+            </button>
           </view>
         </view>
-      </template>
+        </template>
 
       <!-- SGS 游戏视图 -->
       <template v-else-if="gameType === 'sgs'">
@@ -748,6 +772,7 @@ import io from '@hyoga/uni-socket.io';
 import { ROLES_DICTIONARY, CAMP_COLORS, AVALON_ROLES_DICTIONARY } from '../../rolesDictionary.js';
 import AvalonGameView from '../../components/AvalonGameView.vue';
 import ShareQrcodeModal from '../../components/ShareQrcodeModal.vue';
+  import CustomModal from '../../components/CustomModal.vue';
 import LoginView from '../../components/LoginView.vue';
 import PlayerAvatar from '../../components/PlayerAvatar.vue';
 
@@ -780,6 +805,8 @@ const isHost = ref(false);
 const players = ref([]);
 const sortedPlayers = computed(() => [...players.value].sort((a, b) => a.seatNumber - b.seatNumber));
 const selectedRoles = ref([]);
+  const selectedVote = ref(null);
+  const votingCountdown = ref(null);
 
 const activeDictionary = computed(() => gameType.value === 'avalon' ? AVALON_ROLES_DICTIONARY : ROLES_DICTIONARY);
 const activeMyRole = computed(() => gameType.value === 'avalon' ? avalonState.value?.role : myInitialRole.value);
@@ -845,6 +872,7 @@ const isMyTurn = ref(false);
 const nightViewData = ref({});
 const gameResult = ref(null);
 const isDisconnected = ref(false);
+  const globalModal = ref(null);
 
 const avalonState = ref({
   phase: 'waiting',
@@ -1179,6 +1207,8 @@ const joinRoom = (isAuto = false) => {
 
   socket.on('avalon_game_end', (data) => {
     appState.value = 'END';
+      votingCountdown.value = null;
+      selectedVote.value = null;
     avalonState.value.phase = 'end';
     gameResult.value = { winner: data.winner, summary: data.reason, exiledPlayers: [], finalRoles: data.finalRoles || [], timeline: [] };
   });
@@ -1248,18 +1278,26 @@ const joinRoom = (isAuto = false) => {
     }
   });
 
-  socket.on('game_ended', (result) => {
+  socket.on('voting_countdown', (timeLeft) => {
+      votingCountdown.value = timeLeft;
+    });
+    
+    socket.on('game_ended', (result) => {
     appState.value = 'END';
     gameResult.value = result;
     playSound('end');
   });
 
-  socket.on('game_aborted', (data) => {
-    uni.showModal({
-      title: '游戏已中止',
-      content: data.reason,
-      showCancel: false
+  
+    socket.on('kicked_from_room', () => {
+      appState.value = 'LOBBY';
+      roomId.value = '';
+      uni.removeStorageSync('werewolf_roomId');
+      globalModal.value.show({ title: '您已被移出房间', content: '房主已将您移出房间。', type: 'alert' });
     });
+
+    socket.on('game_aborted', (data) => {
+    globalModal.value.show({ title: '游戏已中断', content: data.reason, type: 'alert' });
     appState.value = 'WAITING';
   });
 
@@ -1360,36 +1398,85 @@ const startGame = () => {
   socket.emit('start_game', { sessionId: sessionId.value, roomId: roomId.value });
 };
 
-const leaveRoom = () => {
-  uni.showModal({
-    title: '退出房间',
-    content: '中途退出将导致当前游戏异常，确认退出吗?',
-    success: (res) => {
+
+  const onSeatPodiumClick = (p) => {
+    if (appState.value !== 'WAITING') return;
+    if (!isHost.value) return; // Only host can click
+    if (p.sessionId === sessionId.value) return; // Can't click self
+
+    const opts = [
+      { label: '👑 移交房主', value: 'transfer_host' }
+    ];
+    
+    if (!p.isReady) {
+      opts.push({ label: '🥾 踢出房间', value: 'kick_player' });
+    } else {
+      opts.push({ label: '🚫 (已准备，无法踢出)', value: 'disabled' });
+    }
+
+    globalModal.value.show({
+      title: `对 [${p.seatNumber}号] ${p.nickname} 的操作`,
+      type: 'select',
+      options: opts
+    }).then(res => {
       if (res.confirm) {
+        if (res.value === 'transfer_host') {
+          socket.emit('transfer_host', { sessionId: sessionId.value, roomId: roomId.value, targetId: p.sessionId });
+        } else if (res.value === 'kick_player') {
+          socket.emit('kick_player', { sessionId: sessionId.value, roomId: roomId.value, targetId: p.sessionId });
+        }
+      }
+    });
+  };
+
+  const leaveRoom = () => {
+  globalModal.value.show({
+      title: '退出房间',
+      content: '中途退出将导致当前游戏异常，确认退出吗?',
+      type: 'confirm'
+    }).then(res => {
+      if (res.confirm) {
+
         socket.emit('leave_room', { sessionId: sessionId.value, roomId: roomId.value });
         appState.value = 'LOBBY';
+          votingCountdown.value = null;
+          selectedVote.value = null;
         roomId.value = '';
         uni.removeStorageSync('werewolf_roomId');
       }
-    }
-  });
+    });
 };
 
 const forceReturnLobby = () => {
-  uni.showModal({
-    title: '强制重开',
-    content: '确认强制结束当前对局，带领全员返回大厅吗?',
-    success: (res) => {
+  globalModal.value.show({
+      title: '强制重开',
+      content: '确认强制结束当前对局，带领全员返回大厅吗?',
+      type: 'confirm'
+    }).then(res => {
       if (res.confirm) {
+
         socket.emit('force_return_lobby', { sessionId: sessionId.value, roomId: roomId.value });
       }
-    }
-  });
+    });
 };
 
 // --- 夜间行动具体逻辑 ---
 
-const onSeerPlayerChange = (e) => {
+
+  const openPlayerPicker = (title, onSelectCb) => {
+    const opts = otherPlayers.value.map(p => ({ label: `[${p.seatNumber}号] ${p.nickname}`, value: p }));
+    globalModal.value.show({
+      title,
+      type: 'select',
+      options: opts
+    }).then(res => {
+      if (res.confirm) {
+        onSelectCb(res.value);
+      }
+    });
+  };
+
+  const onSeerPlayerChange = (e) => {
   const target = otherPlayers.value[e.detail.value];
   submitNightAction({ type: 'SEER_PLAYER', targetSeat: target.seatNumber });
 };
@@ -1425,11 +1512,11 @@ const submitNightAction = (actionData) => {
       isMyTurn.value = false;
       
       if (res.seenRole) {
-        uni.showModal({ title: '查看结果', content: `你看到的底牌是：${ROLE_NAMES[res.seenRole]}`, showCancel: false });
+        globalModal.value.show({ title: '查看结果', content: `你看到的底牌是：${ROLE_NAMES[res.seenRole]}`, type: 'alert' });
       } else if (res.seenRoles) {
-        uni.showModal({ title: '查看结果', content: `你看到中央的两张牌是：${ROLE_NAMES[res.seenRoles[0]]} 和 ${ROLE_NAMES[res.seenRoles[1]]}`, showCancel: false });
+        globalModal.value.show({ title: '查看结果', content: `你看到中央的两张牌是：${ROLE_NAMES[res.seenRoles[0]]} 和 ${ROLE_NAMES[res.seenRoles[1]]}`, type: 'alert' });
       } else if (res.newRole) {
-        uni.showModal({ title: '抢夺成功', content: `你换回的新底牌是：${ROLE_NAMES[res.newRole] || '未知'}`, showCancel: false });
+        globalModal.value.show({ title: '抢夺成功', content: `你换回的新底牌是：${ROLE_NAMES[res.newRole] || '未知'}`, type: 'alert' });
       } else {
         uni.showToast({ title: '操作已提交', icon: 'success' });
       }
@@ -1443,14 +1530,21 @@ const forceVote = () => {
   socket.emit('force_vote', { sessionId: sessionId.value, roomId: roomId.value });
 };
 
-const submitVote = (targetseatNumber) => {
-  socket.emit('submit_vote', { 
-    sessionId: sessionId.value, 
-    roomId: roomId.value, 
-    voteTarget: targetseatNumber 
-  });
-  uni.showToast({ title: '投票已提交', icon: 'success' });
-};
+const startVotingCountdown = () => {
+    socket.emit('start_voting_countdown', { sessionId: sessionId.value, roomId: roomId.value });
+  };
+
+  const submitVote = (targetseatNumber) => {
+    if (votingCountdown.value === null) {
+      return uni.showToast({ title: '投票尚未开始', icon: 'none' });
+    }
+    selectedVote.value = targetseatNumber;
+    socket.emit('submit_vote', { 
+      sessionId: sessionId.value, 
+      roomId: roomId.value, 
+      voteTarget: targetseatNumber 
+    });
+  };
 </script>
 
 <style scoped>
@@ -2919,6 +3013,16 @@ const submitVote = (targetseatNumber) => {
   padding: 10rpx 28rpx;
   border: none;
   box-shadow: 0 4rpx 12rpx rgba(239, 68, 68, 0.4);
+  margin: 0; 
+}
+.voted-active {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.4) !important;
+}
+.abstain-active {
+  background: rgba(16, 185, 129, 0.3) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.5) !important;
 }
 
 .vote-action-btn::after { border: none; }

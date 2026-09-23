@@ -189,6 +189,39 @@ io.on('connection', (socket) => {
       }
     }
   });
+  
+  // 移交房主
+  socket.on('transfer_host', (data) => {
+    const { sessionId, roomId, targetId } = data;
+    const room = RoomManager.getRoom(roomId);
+    if (room && room.transferHost(sessionId, targetId)) {
+      broadcastRoomUpdate(roomId);
+    }
+  });
+
+  // 踢出玩家
+  socket.on('kick_player', (data) => {
+    const { sessionId, roomId, targetId } = data;
+    const room = RoomManager.getRoom(roomId);
+    if (room) {
+      const kickedSocketId = room.kickPlayer(sessionId, targetId);
+      if (kickedSocketId) {
+        io.to(kickedSocketId).emit('kicked_from_room');
+        const kickedSocket = io.sockets.sockets.get(kickedSocketId);
+        if (kickedSocket) kickedSocket.leave(roomId);
+        broadcastRoomUpdate(roomId);
+      }
+    }
+  });
+  
+  // 7. 房主开启投票倒计时
+  socket.on('start_voting_countdown', (data) => {
+    const { sessionId, roomId } = data;
+    const room = RoomManager.getRoom(roomId);
+    if (room && room.hostId === sessionId) {
+      room.forceAction('start_voting_countdown', io);
+    }
+  });
 
   // 7. 提交投票
   socket.on('submit_vote', (data) => {

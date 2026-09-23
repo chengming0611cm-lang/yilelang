@@ -244,6 +244,29 @@ export class OnuwEngine extends GameEngine {
   }
 
   forceAction(actionName, io) {
+    if (actionName === 'start_voting_countdown' && this.room.status === 'VOTING') {
+      if (this.game.votingTimer) return false;
+      this.game.votingTimeLeft = 30;
+      io.to(this.room.roomId).emit('voting_countdown', this.game.votingTimeLeft);
+      
+      this.game.votingTimer = setInterval(() => {
+        this.game.votingTimeLeft--;
+        if (this.game.votingTimeLeft <= 0) {
+          clearInterval(this.game.votingTimer);
+          this.game.votingTimer = null;
+          
+          this.room.status = 'END';
+          const allPlayers = Array.from(this.room.players.values());
+          allPlayers.forEach(p => p.isReady = false);
+          
+          const gameResult = this.calculateGameResult();
+          io.to(this.room.roomId).emit('game_ended', gameResult);
+        } else {
+          io.to(this.room.roomId).emit('voting_countdown', this.game.votingTimeLeft);
+        }
+      }, 1000);
+      return true;
+    }
     if (actionName === 'force_vote' && this.room.status === 'DAY') {
       clearTimeout(this.game.dayTimer);
       this.startVotingPhase(io);
@@ -257,17 +280,8 @@ export class OnuwEngine extends GameEngine {
 
     const player = this.room.players.get(sessionId);
     if (player) {
-      player.votesFor = voteTarget; // -1 代表弃权/跳过
-
-      const allPlayers = Array.from(this.room.players.values());
-      const allVoted = allPlayers.every(p => p.votesFor !== null);
-      if (allVoted) {
-        this.room.status = 'END';
-        allPlayers.forEach(p => p.isReady = false);
-        const gameResult = this.calculateGameResult();
-        io.to(this.room.roomId).emit('game_ended', gameResult);
-        return true;
-      }
+      player.votesFor = voteTarget;
+      return true;
     }
     return false;
   }
