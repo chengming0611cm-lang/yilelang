@@ -643,7 +643,7 @@
             <view v-else class="action-panel blind-turn">
               <view class="waiting-turn-icon">⏳</view>
               <text class="action-title">夜深人静，请闭眼等待...</text>
-              <text class="waiting-sub">轮到你的角色时将发出提示音与震动</text>
+              <text class="waiting-sub">请闭眼等待，听从房主设备的统一语音提示行动</text>
             </view>
           </view>
         </view>
@@ -651,16 +651,16 @@
         <!-- ==================== DAY (白天讨论) ==================== -->
         <view v-else-if="appState === 'DAY'" class="day-wrapper">
           <view class="day-sun-aura">☀️</view>
-          <text class="day-heading">太阳升起 · 自由发言讨论</text>
+          <text class="day-heading">自由讨论中，等待房主开启投票...</text>
           <text class="day-sub-desc">请通过线下沟通、盘问逻辑与信息差寻找狼人！</text>
           
           <view class="glass-section mt-4 day-guide-card">
             <text class="guide-tip-title">🗣️ 发言提示</text>
-            <text class="guide-tip-text">注意强盗和捣蛋鬼调牌可能导致身份反转。讨论充分后房主可开启投票。</text>
+            <text class="guide-tip-text">注意强盗和捣蛋鬼调牌可能导致身份反转。</text>
           </view>
 
           <view class="bottom-action-container" v-if="isHost">
-            <button class="confirm-btn danger-btn" @click="forceVote">房主提前开启全员投票</button>
+            <button class="confirm-btn danger-btn" @click="forceVote">发起投票</button>
           </view>
         </view>
 
@@ -671,14 +671,11 @@
             <text class="voting-sub">选择你认为最可疑的玩家进行放逐，也可弃权</text>
           </view>
           
-          <view v-if="votingCountdown === null && isHost" style="margin-bottom: 30rpx; width: 100%;">
-            <button class="confirm-btn" @click="startVotingCountdown" style="width: 100%; border-radius: 12rpx; background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: bold; border: none;">▶️ 房主开启投票 (30s倒计时)</button>
-          </view>
-          <view v-else-if="votingCountdown !== null" style="margin-bottom: 30rpx; text-align: center;">
+          <view v-if="votingCountdown > 0" style="margin-bottom: 30rpx; text-align: center;">
             <text style="font-size: 40rpx; color: #ef4444; font-weight: 900;">⏳ 距离投票结束还有：{{ votingCountdown }}s</text>
           </view>
           <view v-else style="margin-bottom: 30rpx; text-align: center;">
-            <text style="font-size: 30rpx; color: #94a3b8;">等待房主开启投票...</text>
+            <text style="font-size: 40rpx; color: #94a3b8; font-weight: 900;">正在结算...</text>
           </view>
 
           <view class="voting-grid">
@@ -695,7 +692,7 @@
                 :class="{'voted-active': selectedVote === p.seatNumber}"
                 hover-class="action-btn-hover" 
                 @click="submitVote(p.seatNumber)"
-                :disabled="votingCountdown === null">
+                :disabled="votingCountdown <= 0">
                 {{ selectedVote === p.seatNumber ? (p.seatNumber === mySeatNumber ? '已选自己' : '已投TA') : (p.seatNumber === mySeatNumber ? '投自己' : '投TA') }}
               </button>
             </view>
@@ -703,12 +700,13 @@
 
           <view class="bottom-action-container" style="margin-top: 40rpx; width: 100%; position: relative;">
             <button 
-              class="abstain-btn" 
-              :class="{'abstain-active': selectedVote === -1}"
-              @click="submitVote(-1)"
-              :disabled="votingCountdown === null">
-              🏳️ {{ selectedVote === -1 ? '已选弃权' : '放弃本次投票（弃权）' }}
-            </button>
+                class="abstain-btn" 
+                :class="{'abstain-active': selectedVote === -1}"
+                hover-class="abstain-hover"
+                @click="submitVote(-1)"
+                :disabled="votingCountdown <= 0">
+                🏳️ {{ selectedVote === -1 ? '已弃权' : '放弃本次投票 (弃权)' }}
+              </button>
           </view>
         </view>
         </template>
@@ -933,6 +931,7 @@ const playTone = (freq, startTime, duration, volume = 0.3, type = 'sine') => {
 };
 
 const playSound = (name) => {
+  if (!isHost.value) return; // 只有房主能播放声音
   if (!audioCtx) {
     initAudio();
     if (!audioCtx) return;
@@ -990,7 +989,7 @@ const testAudio = () => {
     audioCtx.resume();
   }
   playSound('myTurn');
-  uni.vibrateShort();
+  // uni.vibrateShort();
   const hasTTS = typeof window !== 'undefined' && !!window.speechSynthesis;
   if (isHost.value && hasTTS) {
     speak('语音播报正常');
@@ -1097,7 +1096,10 @@ const joinRoom = (isAuto = false) => {
           }
           if (res.playerState) myInitialRole.value = res.playerState.initialRole;
           
-          if (gameType.value === 'avalon' && res.gameState) {
+          if (gameType.value === 'onuw' && res.gameState && res.gameState.votingEndTime) {
+              startLocalCountdown(res.gameState.votingEndTime);
+            }
+            if (gameType.value === 'avalon' && res.gameState) {
              avalonState.value.role = res.playerState.initialRole;
              avalonState.value.phase = res.gameState.phase;
              avalonState.value.vision = res.gameState.vision || {};
@@ -1278,7 +1280,7 @@ const joinRoom = (isAuto = false) => {
     isMyTurn.value = true;
     nightViewData.value = data; 
     playSound('myTurn');        
-    uni.vibrateShort();         
+    // uni.vibrateShort();         
   });
 
   socket.on('day_started', (data) => {
@@ -1289,17 +1291,18 @@ const joinRoom = (isAuto = false) => {
     }
   });
 
-  socket.on('voting_started', () => {
-    appState.value = 'VOTING';
-    playSound('vote');
-    if (isHost.value) {
-      speak("讨论时间结束，请所有人在手机上投票。");
-    }
-  });
-
-  socket.on('voting_countdown', (timeLeft) => {
-      votingCountdown.value = timeLeft;
+  socket.on('voting_started', (data) => {
+      appState.value = 'VOTING';
+      playSound('vote');
+      if (isHost.value) {
+        speak("讨论时间结束，请所有人在手机上投票。");
+      }
+      if (data && data.votingEndTime) {
+        startLocalCountdown(data.votingEndTime);
+      }
     });
+
+  
     
     socket.on('game_ended', (result) => {
     appState.value = 'END';
@@ -1556,12 +1559,26 @@ const forceVote = () => {
   socket.emit('force_vote', { sessionId: sessionId.value, roomId: roomId.value });
 };
 
-const startVotingCountdown = () => {
+let localVotingTimer = null;
+  const startLocalCountdown = (endTime) => {
+    if (localVotingTimer) clearInterval(localVotingTimer);
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+      votingCountdown.value = remaining;
+      if (remaining <= 0) {
+        clearInterval(localVotingTimer);
+      }
+    };
+    updateCountdown();
+    localVotingTimer = setInterval(updateCountdown, 1000);
+  };
+  
+  const startVotingCountdown = () => {
     socket.emit('start_voting_countdown', { sessionId: sessionId.value, roomId: roomId.value });
   };
 
   const submitVote = (targetseatNumber) => {
-    if (votingCountdown.value === null) {
+    if (votingCountdown.value <= 0) {
       return uni.showToast({ title: '投票尚未开始', icon: 'none' });
     }
     selectedVote.value = targetseatNumber;
@@ -3046,9 +3063,10 @@ const startVotingCountdown = () => {
   box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.4) !important;
 }
 .abstain-active {
-  background: rgba(16, 185, 129, 0.3) !important;
-  color: #10b981 !important;
-  border: 1px solid rgba(16, 185, 129, 0.5) !important;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #ffffff !important;
+  border: 2px solid #34d399 !important;
+  box-shadow: 0 4rpx 16rpx rgba(16, 185, 129, 0.5) !important;
 }
 
 .vote-action-btn::after { border: none; }
@@ -3057,9 +3075,9 @@ const startVotingCountdown = () => {
 .abstain-btn {
   width: 100%;
   height: 88rpx;
-  background: rgba(100, 116, 139, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cbd5e1;
+  background: transparent;
+  border: 2px solid #64748b;
+  color: #ffffff;
   font-size: 28rpx;
   font-weight: 700;
   border-radius: 20rpx;
@@ -3067,10 +3085,15 @@ const startVotingCountdown = () => {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .abstain-btn::after { border: none; }
-.abstain-btn:active { background: rgba(100, 116, 139, 0.35); transform: scale(0.98); }
+.abstain-hover {
+  background: rgba(100, 116, 139, 0.3) !important;
+  border-color: #94a3b8 !important;
+  transform: scale(0.98);
+}
 
 /* ================== END (复盘结算) ================== */
 .end-section-container {
