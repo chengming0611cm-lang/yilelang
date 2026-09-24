@@ -651,16 +651,16 @@
         <!-- ==================== DAY (白天讨论) ==================== -->
         <view v-else-if="appState === 'DAY'" class="day-wrapper">
           <view class="day-sun-aura">☀️</view>
-          <text class="day-heading">太阳升起 · 自由发言讨论</text>
+          <text class="day-heading">自由讨论中，等待房主开启投票...</text>
           <text class="day-sub-desc">请通过线下沟通、盘问逻辑与信息差寻找狼人！</text>
           
           <view class="glass-section mt-4 day-guide-card">
             <text class="guide-tip-title">🗣️ 发言提示</text>
-            <text class="guide-tip-text">注意强盗和捣蛋鬼调牌可能导致身份反转。讨论充分后房主可开启投票。</text>
+            <text class="guide-tip-text">注意强盗和捣蛋鬼调牌可能导致身份反转。</text>
           </view>
 
           <view class="bottom-action-container" v-if="isHost">
-            <button class="confirm-btn danger-btn" @click="forceVote">房主提前开启全员投票</button>
+            <button class="confirm-btn danger-btn" @click="forceVote">发起投票</button>
           </view>
         </view>
 
