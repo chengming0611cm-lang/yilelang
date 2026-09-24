@@ -643,7 +643,7 @@
             <view v-else class="action-panel blind-turn">
               <view class="waiting-turn-icon">⏳</view>
               <text class="action-title">夜深人静，请闭眼等待...</text>
-              <text class="waiting-sub">轮到你的角色时将发出提示音与震动</text>
+              <text class="waiting-sub">请闭眼等待，听从房主设备的统一语音提示行动</text>
             </view>
           </view>
         </view>
@@ -933,6 +933,7 @@ const playTone = (freq, startTime, duration, volume = 0.3, type = 'sine') => {
 };
 
 const playSound = (name) => {
+  if (!isHost.value) return; // 只有房主能播放声音
   if (!audioCtx) {
     initAudio();
     if (!audioCtx) return;
@@ -990,7 +991,7 @@ const testAudio = () => {
     audioCtx.resume();
   }
   playSound('myTurn');
-  uni.vibrateShort();
+  // uni.vibrateShort();
   const hasTTS = typeof window !== 'undefined' && !!window.speechSynthesis;
   if (isHost.value && hasTTS) {
     speak('语音播报正常');
@@ -1278,7 +1279,7 @@ const joinRoom = (isAuto = false) => {
     isMyTurn.value = true;
     nightViewData.value = data; 
     playSound('myTurn');        
-    uni.vibrateShort();         
+    // uni.vibrateShort();         
   });
 
   socket.on('day_started', (data) => {
