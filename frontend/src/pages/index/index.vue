@@ -671,14 +671,11 @@
             <text class="voting-sub">选择你认为最可疑的玩家进行放逐，也可弃权</text>
           </view>
           
-          <view v-if="votingCountdown === null && isHost" style="margin-bottom: 30rpx; width: 100%;">
-            <button class="confirm-btn" @click="startVotingCountdown" style="width: 100%; border-radius: 12rpx; background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: bold; border: none;">▶️ 房主开启投票 (30s倒计时)</button>
-          </view>
-          <view v-else-if="votingCountdown !== null" style="margin-bottom: 30rpx; text-align: center;">
+          <view v-if="votingCountdown > 0" style="margin-bottom: 30rpx; text-align: center;">
             <text style="font-size: 40rpx; color: #ef4444; font-weight: 900;">⏳ 距离投票结束还有：{{ votingCountdown }}s</text>
           </view>
           <view v-else style="margin-bottom: 30rpx; text-align: center;">
-            <text style="font-size: 30rpx; color: #94a3b8;">等待房主开启投票...</text>
+            <text style="font-size: 40rpx; color: #94a3b8; font-weight: 900;">正在结算...</text>
           </view>
 
           <view class="voting-grid">
@@ -695,7 +692,7 @@
                 :class="{'voted-active': selectedVote === p.seatNumber}"
                 hover-class="action-btn-hover" 
                 @click="submitVote(p.seatNumber)"
-                :disabled="votingCountdown === null">
+                :disabled="votingCountdown <= 0">
                 {{ selectedVote === p.seatNumber ? (p.seatNumber === mySeatNumber ? '已选自己' : '已投TA') : (p.seatNumber === mySeatNumber ? '投自己' : '投TA') }}
               </button>
             </view>
@@ -707,7 +704,7 @@
                 :class="{'abstain-active': selectedVote === -1}"
                 hover-class="abstain-hover"
                 @click="submitVote(-1)"
-                :disabled="votingCountdown === null">
+                :disabled="votingCountdown <= 0">
                 🏳️ {{ selectedVote === -1 ? '已弃权' : '放弃本次投票 (弃权)' }}
               </button>
           </view>
@@ -1099,7 +1096,10 @@ const joinRoom = (isAuto = false) => {
           }
           if (res.playerState) myInitialRole.value = res.playerState.initialRole;
           
-          if (gameType.value === 'avalon' && res.gameState) {
+          if (gameType.value === 'onuw' && res.gameState && res.gameState.votingEndTime) {
+              startLocalCountdown(res.gameState.votingEndTime);
+            }
+            if (gameType.value === 'avalon' && res.gameState) {
              avalonState.value.role = res.playerState.initialRole;
              avalonState.value.phase = res.gameState.phase;
              avalonState.value.vision = res.gameState.vision || {};
@@ -1291,17 +1291,18 @@ const joinRoom = (isAuto = false) => {
     }
   });
 
-  socket.on('voting_started', () => {
-    appState.value = 'VOTING';
-    playSound('vote');
-    if (isHost.value) {
-      speak("讨论时间结束，请所有人在手机上投票。");
-    }
-  });
-
-  socket.on('voting_countdown', (timeLeft) => {
-      votingCountdown.value = timeLeft;
+  socket.on('voting_started', (data) => {
+      appState.value = 'VOTING';
+      playSound('vote');
+      if (isHost.value) {
+        speak("讨论时间结束，请所有人在手机上投票。");
+      }
+      if (data && data.votingEndTime) {
+        startLocalCountdown(data.votingEndTime);
+      }
     });
+
+  
     
     socket.on('game_ended', (result) => {
     appState.value = 'END';
@@ -1558,12 +1559,26 @@ const forceVote = () => {
   socket.emit('force_vote', { sessionId: sessionId.value, roomId: roomId.value });
 };
 
-const startVotingCountdown = () => {
+let localVotingTimer = null;
+  const startLocalCountdown = (endTime) => {
+    if (localVotingTimer) clearInterval(localVotingTimer);
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+      votingCountdown.value = remaining;
+      if (remaining <= 0) {
+        clearInterval(localVotingTimer);
+      }
+    };
+    updateCountdown();
+    localVotingTimer = setInterval(updateCountdown, 1000);
+  };
+  
+  const startVotingCountdown = () => {
     socket.emit('start_voting_countdown', { sessionId: sessionId.value, roomId: roomId.value });
   };
 
   const submitVote = (targetseatNumber) => {
-    if (votingCountdown.value === null) {
+    if (votingCountdown.value <= 0) {
       return uni.showToast({ title: '投票尚未开始', icon: 'none' });
     }
     selectedVote.value = targetseatNumber;

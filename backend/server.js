@@ -78,7 +78,8 @@ io.on('connection', (socket) => {
         } else if (room.gameType === 'onuw') {
           gameState = {
             currentNightRole: room.engine.game.currentActiveRole || '',
-            nightViewData: room.status === 'NIGHT' && typeof room.engine.getRoleNightViewData === 'function' ? room.engine.getRoleNightViewData(player) : {}
+            nightViewData: room.status === 'NIGHT' && typeof room.engine.getRoleNightViewData === 'function' ? room.engine.getRoleNightViewData(player) : {},
+            votingEndTime: room.engine.game.votingEndTime || null
           };
         }
       }
@@ -371,7 +372,8 @@ io.on('connection', (socket) => {
         } else if (room.gameType === 'onuw') {
           gameState = {
             currentNightRole: room.engine.game.currentActiveRole || '',
-            nightViewData: room.status === 'NIGHT' && typeof room.engine.getRoleNightViewData === 'function' ? room.engine.getRoleNightViewData(player) : {}
+            nightViewData: room.status === 'NIGHT' && typeof room.engine.getRoleNightViewData === 'function' ? room.engine.getRoleNightViewData(player) : {},
+            votingEndTime: room.engine.game.votingEndTime || null
           };
         }
       }
