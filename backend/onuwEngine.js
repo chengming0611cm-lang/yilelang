@@ -248,9 +248,8 @@ export class OnuwEngine extends GameEngine {
       discussTime: this.room.settings.discussTime || 300
     });
 
-    this.game.dayTimer = setTimeout(() => {
-      this.startVotingPhase(io);
-    }, (this.room.settings.discussTime || 300) * 1000);
+    // 移除自动跳转，完全由房主手动触发 voting
+    // this.game.dayTimer = setTimeout(() => { ... });
   }
 
   startVotingPhase(io) {
