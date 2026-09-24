@@ -1,0 +1,18 @@
+{
+  "name": "yilelang",
+  "version": "1.0.0",
+  "description": "Tabletop party game assistant",
+  "private": true,
+  "type": "module",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "build": "cd backend && npm install"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.7.5"
+  }
+}
