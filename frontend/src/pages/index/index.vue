@@ -703,12 +703,13 @@
 
           <view class="bottom-action-container" style="margin-top: 40rpx; width: 100%; position: relative;">
             <button 
-              class="abstain-btn" 
-              :class="{'abstain-active': selectedVote === -1}"
-              @click="submitVote(-1)"
-              :disabled="votingCountdown === null">
-              🏳️ {{ selectedVote === -1 ? '已选弃权' : '放弃本次投票（弃权）' }}
-            </button>
+                class="abstain-btn" 
+                :class="{'abstain-active': selectedVote === -1}"
+                hover-class="abstain-hover"
+                @click="submitVote(-1)"
+                :disabled="votingCountdown === null">
+                🏳️ {{ selectedVote === -1 ? '已弃权' : '放弃本次投票 (弃权)' }}
+              </button>
           </view>
         </view>
         </template>
@@ -3047,9 +3048,10 @@ const startVotingCountdown = () => {
   box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.4) !important;
 }
 .abstain-active {
-  background: rgba(16, 185, 129, 0.3) !important;
-  color: #10b981 !important;
-  border: 1px solid rgba(16, 185, 129, 0.5) !important;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #ffffff !important;
+  border: 2px solid #34d399 !important;
+  box-shadow: 0 4rpx 16rpx rgba(16, 185, 129, 0.5) !important;
 }
 
 .vote-action-btn::after { border: none; }
@@ -3058,9 +3060,9 @@ const startVotingCountdown = () => {
 .abstain-btn {
   width: 100%;
   height: 88rpx;
-  background: rgba(100, 116, 139, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cbd5e1;
+  background: transparent;
+  border: 2px solid #64748b;
+  color: #ffffff;
   font-size: 28rpx;
   font-weight: 700;
   border-radius: 20rpx;
@@ -3068,10 +3070,15 @@ const startVotingCountdown = () => {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .abstain-btn::after { border: none; }
-.abstain-btn:active { background: rgba(100, 116, 139, 0.35); transform: scale(0.98); }
+.abstain-hover {
+  background: rgba(100, 116, 139, 0.3) !important;
+  border-color: #94a3b8 !important;
+  transform: scale(0.98);
+}
 
 /* ================== END (复盘结算) ================== */
 .end-section-container {
